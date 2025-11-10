@@ -1,0 +1,42 @@
+FROM python:3.12-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies with uv (locked versions)
+RUN uv sync --locked --no-dev
+
+# Copy application code
+COPY src/ ./src/
+COPY config.py ./
+
+# Create necessary directories
+RUN mkdir -p data/raw data/processed outputs
+
+# Expose API port
+EXPOSE 8000
+
+# Environment variables
+ENV NEO4J_URI=bolt://neo4j:7687
+ENV NEO4J_USER=neo4j
+ENV NEO4J_PASSWORD=fraud_detection_2024
+ENV API_HOST=0.0.0.0
+ENV API_PORT=8000
+ENV PYTHONUNBUFFERED=1
+
+# Run Graph RAG API
+CMD ["uv", "run", "uvicorn", "src.api.graph_rag_api:app", "--host", "0.0.0.0", "--port", "8000"]
