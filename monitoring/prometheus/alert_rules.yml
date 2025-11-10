@@ -1,0 +1,97 @@
+groups:
+  - name: fraud_detection_alerts
+    interval: 1m
+    rules:
+      # Model performance alerts
+      - alert: PrecisionBelowTarget
+        expr: fraud_detection_precision < 0.8
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Model precision dropped below 0.8"
+          description: "Current precision: {{ $value }}. Target range: 0.8-0.9"
+
+      - alert: PrecisionAboveTarget
+        expr: fraud_detection_precision > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model precision above 0.9 (may indicate low recall)"
+          description: "Current precision: {{ $value }}. Target range: 0.8-0.9"
+
+      - alert: RecallBelowTarget
+        expr: fraud_detection_recall < 0.95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model recall dropped below target"
+          description: "Current recall: {{ $value }}. Target: >0.95"
+
+      # Service health alerts
+      - alert: Neo4jDown
+        expr: up{job="neo4j"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Neo4j database is down"
+          description: "Neo4j service has been down for more than 1 minute"
+
+      - alert: GraphRAGAPIDown
+        expr: up{job="graph-rag-api"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Graph RAG API is down"
+          description: "API service has been down for more than 2 minutes"
+
+      - alert: MLflowDown
+        expr: up{job="mlflow"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MLflow tracking server is down"
+          description: "MLflow has been down for more than 5 minutes"
+
+      # Data quality alerts
+      - alert: FraudRateAnomaly
+        expr: abs(fraud_detection_fraud_rate - 0.15) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Fraud rate significantly different from expected 15%"
+          description: "Current fraud rate: {{ $value }}. Expected: ~0.15"
+
+      - alert: NoHighRiskUsers
+        expr: fraud_detection_high_risk_users == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No high-risk users detected"
+          description: "Batch scoring has not flagged any users as high-risk"
+
+      # Resource alerts
+      - alert: Neo4jHighMemory
+        expr: neo4j_memory_pool_used_bytes / neo4j_memory_pool_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Neo4j memory usage > 90%"
+          description: "Neo4j is using {{ $value | humanizePercentage }} of available memory"
+
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Graph RAG API p95 latency > 1s"
+          description: "95th percentile latency: {{ $value }}s"
