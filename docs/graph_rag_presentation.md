@@ -132,6 +132,29 @@ Devices reused by multiple users are strong signals for collusion or shared acco
 
 ![](./images/device_sharing.png)
 
+---
+
+## Graph visualizations (overview)
+
+Below is a visual overview of the graph we build from users, devices and transactions. Nodes are users (blue) and devices (green); edges show device associations and transactions.
+
+![](./images/graph_overview.png)
+
+---
+
+## Graph communities
+
+We run community detection on the user graph and color users by community — this helps surface rings and colluding groups.
+
+![](./images/graph_communities.png)
+
+---
+
+## Transaction neighborhood for a high-risk user
+
+When a user scores highly, we retrieve their transaction neighborhood and present it to investigators as contextual evidence.
+
+![](./images/transaction_path.png)
 
 ---
 
