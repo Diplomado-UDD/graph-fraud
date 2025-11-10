@@ -31,6 +31,28 @@ def latest_risk_file():
     return files[-1]
 
 
+def check_inputs():
+    """Check that required input files exist and print friendly messages if not."""
+    missing = []
+    # check outputs risk file
+    files = sorted(glob.glob(str(ROOT / 'outputs' / 'risk_scores_*.csv')))
+    if not files:
+        missing.append("No risk_scores CSV found in 'outputs/'. Run the training or batch_scoring scripts first.")
+
+    # check raw data files
+    required = ['users.csv', 'devices.csv', 'user_devices.csv', 'transactions.csv']
+    missing_raw = [f for f in required if not (ROOT / 'data' / 'raw' / f).exists()]
+    if missing_raw:
+        missing.append(f"Missing raw data files under data/raw/: {', '.join(missing_raw)}")
+
+    if missing:
+        print('\nInput check failed:')
+        for m in missing:
+            print(' -', m)
+        print("\nTo fix: ensure the dataset is generated (see docs/REPRODUCE.md) or run scripts/generate_data.py / training pipeline to create the outputs.")
+        sys.exit(3)
+
+
 def plot_risk_hist(df):
     plt.figure(figsize=(6,4))
     scores = df['risk_score'].clip(0,1)
