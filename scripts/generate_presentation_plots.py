@@ -9,7 +9,6 @@ Produces:
 This script uses only common plotting libs available in the repo venv (matplotlib, pandas).
 """
 import sys
-import config
 from pathlib import Path
 import glob
 import pandas as pd
@@ -19,6 +18,10 @@ import matplotlib.pyplot as plt
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / 'docs' / 'images'
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Ensure repo root is on sys.path so `import config` works when running the script directly
+sys.path.insert(0, str(ROOT))
+import config
 
 
 def latest_risk_file():
