@@ -9,6 +9,7 @@ Produces:
 This script uses only common plotting libs available in the repo venv (matplotlib, pandas).
 """
 import sys
+import config
 from pathlib import Path
 import glob
 import pandas as pd
@@ -29,7 +30,15 @@ def latest_risk_file():
 
 def plot_risk_hist(df):
     plt.figure(figsize=(6,4))
-    plt.hist(df['risk_score'].clip(0,1), bins=20, color='#2b8cbe', edgecolor='k')
+    scores = df['risk_score'].clip(0,1)
+    plt.hist(scores, bins=20, color='#2b8cbe', edgecolor='k')
+    # mark risk threshold
+    try:
+        thr = config.RISK_THRESHOLD
+        plt.axvline(thr, color='red', linestyle='--', linewidth=1)
+        plt.text(thr + 0.01, plt.gca().get_ylim()[1]*0.9, f'Threshold={thr}', color='red')
+    except Exception:
+        pass
     plt.title('Distribution of risk scores')
     plt.xlabel('Risk score')
     plt.ylabel('Number of users')
@@ -44,9 +53,19 @@ def plot_risk_hist(df):
 def plot_top_users(df, n=10):
     top = df.sort_values('risk_score', ascending=False).head(n)
     plt.figure(figsize=(6,4))
-    plt.barh(top['user_id'].astype(str)[::-1], top['risk_score'][::-1], color='#f46d43')
+    bars = plt.barh(top['user_id'].astype(str)[::-1], top['risk_score'][::-1], color='#f46d43')
     plt.xlabel('Risk score')
     plt.title(f'Top {n} highest-risk users')
+    # annotate bar values
+    for bar in bars:
+        w = bar.get_width()
+        plt.text(w + 0.005, bar.get_y() + bar.get_height()/2, f'{w:.2f}', va='center')
+    # highlight the top user
+    try:
+        top_user = str(top.iloc[0]['user_id'])
+        plt.gca().yaxis.get_ticklabels()[-1].set_weight('bold')
+    except Exception:
+        pass
     plt.tight_layout()
     p = OUT_DIR / 'top_users.png'
     plt.savefig(p, dpi=150)

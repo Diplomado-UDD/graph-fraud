@@ -140,6 +140,8 @@ Below is a visual overview of the graph we build from users, devices and transac
 
 ![](./images/graph_overview.png)
 
+**Speaker notes:** Explain that this view is a simplified subgraph (largest component). Point out how devices connect users and how transaction edges can bridge communities.
+
 ---
 
 ## Graph communities
@@ -148,6 +150,8 @@ We run community detection on the user graph and color users by community — th
 
 ![](./images/graph_communities.png)
 
+**Speaker notes:** Describe the community detection method (greedy modularity) and why communities often correspond to fraud rings.
+
 ---
 
 ## Transaction neighborhood for a high-risk user
@@ -155,6 +159,8 @@ We run community detection on the user graph and color users by community — th
 When a user scores highly, we retrieve their transaction neighborhood and present it to investigators as contextual evidence.
 
 ![](./images/transaction_path.png)
+
+**Speaker notes:** Walk through this neighborhood: the central red node is the flagged user, orange nodes are shared devices, blue nodes are other users; emphasize multi-hop connections used by the retriever.
 
 ---
 
