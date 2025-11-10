@@ -110,6 +110,31 @@ Visual:
 
 ---
 
+## Risk score distribution
+
+Below is the distribution of risk scores produced by the model for a recent run. The histogram shows most users have low scores while a small tail contains high-risk users.
+
+![](./images/risk_hist.png)
+
+---
+
+## Highest-risk users (top 10)
+
+The bar chart shows the top 10 users by predicted risk score — these are the users we'd prioritize for triage.
+
+![](./images/top_users.png)
+
+---
+
+## Device sharing: signals of risk
+
+Devices reused by multiple users are strong signals for collusion or shared accounts. The chart below lists the devices connected to the most distinct users in the dataset.
+
+![](./images/device_sharing.png)
+
+
+---
+
 ## Reproducibility & how students can run it
 
 1. Clone the repo and follow `docs/REPRODUCE.md`.
