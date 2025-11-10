@@ -1,0 +1,72 @@
+name: Health Check
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv (project package manager)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+
+      - name: Build and start stack with Docker Compose
+        run: |
+          docker compose up -d --build
+          # wait a bit for services to start
+          sleep 15
+
+      - name: Run health check script
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv run python scripts/check_system_health.py > health-report.txt
+
+      - name: Export MLflow runs
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv run python scripts/export_mlflow_runs.py
+
+      - name: Run training pipeline (integration)
+        run: |
+          # Run training inside the graph-rag-api container so it uses the repo venv
+          docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/train_fraud_detector.py
+
+      - name: Run batch scoring (integration)
+        run: |
+          docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/batch_scoring.py
+
+      - name: Export MLflow runs (post-integration)
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv run python scripts/export_mlflow_runs.py
+
+      - name: Upload MLflow export (post-integration)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-runs-post-integration
+          path: outputs/mlflow_runs.json
+
+      - name: Upload scoring outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: scoring-outputs
+          path: outputs/
+
+      - name: Upload MLflow export
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-runs
+          path: outputs/mlflow_runs.json
+
+      - name: Upload health report
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-report
+          path: health-report.txt
