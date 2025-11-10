@@ -8,6 +8,7 @@ on:
 jobs:
   health-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +27,11 @@ jobs:
       - name: Run health check script
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          uv run python scripts/check_system_health.py > health-report.txt
+          # Fail fast: run the health-check and capture output; if it fails, print the report and stop the job
+          if ! uv run python scripts/check_system_health.py > health-report.txt; then
+            cat health-report.txt
+            exit 1
+          fi
 
       - name: Export MLflow runs
         run: |
@@ -35,12 +40,14 @@ jobs:
 
       - name: Run training pipeline (integration)
         run: |
-          # Run training inside the graph-rag-api container so it uses the repo venv
-          docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/train_fraud_detector.py
+          # Run training inside the graph-rag-api container with a timeout to avoid long-running jobs
+          # If training exceeds 20 minutes the step will fail.
+          timeout 20m docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/train_fraud_detector.py
 
       - name: Run batch scoring (integration)
         run: |
-          docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/batch_scoring.py
+          # Batch scoring should also be bounded; use a 10 minute timeout
+          timeout 10m docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/batch_scoring.py
 
       - name: Export MLflow runs (post-integration)
         run: |

@@ -17,6 +17,7 @@ import urllib.request
 import urllib.error
 from urllib.parse import urljoin
 import os
+import sys
 
 try:
     import config
@@ -62,6 +63,7 @@ def docker_ps(names):
 def main():
     results = {}
     print("Checking HTTP services:")
+    any_fail = False
     for k, url in SERVICES.items():
         ok, info = check_http(url)
         results[k] = {"ok": ok, "info": info}
@@ -126,7 +128,19 @@ def main():
         print(f" - {n}: {s}")
 
     print("\nSummary JSON:")
-    print(json.dumps({"http": results, "docker": ps}, indent=2))
+    summary = {"http": results, "docker": ps}
+    print(json.dumps(summary, indent=2))
+
+    # Exit non-zero if any check failed so CI can fail fast
+    any_fail = False
+    for k, v in results.items():
+        if not v.get("ok", False):
+            any_fail = True
+            break
+
+    if any_fail:
+        print("One or more health checks failed; exiting with status 2")
+        sys.exit(2)
 
 
 if __name__ == '__main__':
