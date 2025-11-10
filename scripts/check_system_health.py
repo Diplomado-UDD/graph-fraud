@@ -133,13 +133,22 @@ def main():
 
     # Exit non-zero if any check failed so CI can fail fast
     any_fail = False
+    # Fail if any HTTP check failed
     for k, v in results.items():
         if not v.get("ok", False):
             any_fail = True
             break
 
+    # Also fail if any of the important docker containers report unhealthy or are not running
+    if not any_fail:
+        for name, status in ps.items():
+            s = (status or "").lower()
+            if "unhealthy" in s or "not running" in s or s.startswith("error:"):
+                any_fail = True
+                break
+
     if any_fail:
-        print("One or more health checks failed; exiting with status 2")
+        print("One or more health checks failed (HTTP or container health); exiting with status 2")
         sys.exit(2)
 
 
