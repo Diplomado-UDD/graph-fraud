@@ -120,6 +120,12 @@ jobs:
           done
         shell: bash
 
+      - name: Parse diagnostics and produce summary
+        if: failure()
+        run: |
+          echo "Running diagnostics parser"
+          python3 scripts/ci/parse_diagnostics.py || true
+
       - name: Upload docker diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -133,3 +139,4 @@ jobs:
             logs_graph-rag-api.txt
             logs_prometheus.txt
             logs_grafana.txt
+            diagnostics_summary.txt
