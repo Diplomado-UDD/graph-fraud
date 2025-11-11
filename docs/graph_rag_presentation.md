@@ -4,6 +4,31 @@ theme: default
 paginate: true
 class: lead
 backgroundColor: '#ffffff'
+size: letter
+style: |
+  section {
+    font-size: 24px;
+  }
+  img {
+    display: block;
+    margin: 0 auto;
+    max-width: 90%;
+    max-height: 500px;
+    object-fit: contain;
+  }
+  h1 {
+    font-size: 48px;
+  }
+  h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+  ul, ol {
+    font-size: 22px;
+  }
+  code {
+    font-size: 18px;
+  }
 ---
 
 # Fraud Detection: Business Problem & Graph RAG Technical Solution
@@ -112,55 +137,55 @@ Visual:
 
 ## Risk score distribution
 
-Below is the distribution of risk scores produced by the model for a recent run. The histogram shows most users have low scores while a small tail contains high-risk users.
+The histogram shows most users have low scores while a small tail contains high-risk users.
 
-![](./images/risk_hist.png)
+![width:700px](./images/risk_hist.png)
 
 ---
 
 ## Highest-risk users (top 10)
 
-The bar chart shows the top 10 users by predicted risk score — these are the users we'd prioritize for triage.
+Top 10 users by predicted risk score — prioritized for triage.
 
-![](./images/top_users.png)
+![width:700px](./images/top_users.png)
 
 ---
 
 ## Device sharing: signals of risk
 
-Devices reused by multiple users are strong signals for collusion or shared accounts. The chart below lists the devices connected to the most distinct users in the dataset.
+Devices connected to multiple users — strong signals for collusion.
 
-![](./images/device_sharing.png)
+![width:700px](./images/device_sharing.png)
 
 ---
 
 ## Graph visualizations (overview)
 
-Below is a visual overview of the graph we build from users, devices and transactions. Nodes are users (blue) and devices (green); edges show device associations and transactions.
+Users (blue) and devices (green) with their connections.
 
-![](./images/graph_overview.png)
+![width:650px](./images/graph_overview.png)
 
-**Speaker notes:** Explain that this view is a simplified subgraph (largest component). Point out how devices connect users and how transaction edges can bridge communities.
+<small>**Note:** Simplified subgraph showing largest component. Devices bridge users and communities.</small>
 
 ---
 
 ## Graph communities
 
-We run community detection on the user graph and color users by community — this helps surface rings and colluding groups.
+Community detection to surface fraud rings (colored by group).
 
-![](./images/graph_communities.png)
+![width:650px](./images/graph_communities.png)
 
-**Speaker notes:** Describe the community detection method (greedy modularity) and why communities often correspond to fraud rings.
+<small>**Note:** Greedy modularity algorithm. Communities often correspond to fraud rings.</small>
 
 ---
 
 ## Transaction neighborhood for a high-risk user
 
-When a user scores highly, we retrieve their transaction neighborhood and present it to investigators as contextual evidence.
+Retrieved context for investigators: red (flagged user), orange (devices), blue (other users).
 
-![](./images/transaction_path.png)
+![width:650px](./images/transaction_path.png)
 
-**Speaker notes:** Walk through this neighborhood: the central red node is the flagged user, orange nodes are shared devices, blue nodes are other users; emphasize multi-hop connections used by the retriever.
+<small>**Note:** Multi-hop connections show how the retriever builds contextual evidence.</small>
 
 ---
 
