@@ -7,8 +7,8 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: docker.io
-  IMAGE_NAME: fraud-detector
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -20,33 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Docker Hub secrets
-        id: check_secrets
-        env:
-          DOCKERHUB_USERNAME: "placeholder-username"
-          DOCKERHUB_TOKEN: "placeholder-token"
-        run: |
-          if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
-            echo "push_enabled=false" >> $GITHUB_OUTPUT
-          else
-            echo "push_enabled=true" >> $GITHUB_OUTPUT
-          fi
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image tags
-        id: set_tags
-        run: |
-          # If Docker Hub secrets are available, push under the user's namespace; otherwise use local tags
-          if [ "${{ steps.check_secrets.outputs.push_enabled }}" = "true" ]; then
-            echo "tags=${{ env.REGISTRY }}/placeholder/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "api_tags=${{ env.REGISTRY }}/placeholder/${{ env.IMAGE_NAME }}-api:${{ github.sha }}" >> $GITHUB_OUTPUT
-          else
-            echo "tags=${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "api_tags=${{ env.IMAGE_NAME }}-api:${{ github.sha }}" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-
-      - name: Extract metadata
-        id: meta
+      - name: Extract metadata for batch image
+        id: meta-batch
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -57,25 +39,37 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - name: Build batch scoring image (build and optionally push)
+      - name: Extract metadata for API image
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push batch scoring image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile
-          push: ${{ steps.check_secrets.outputs.push_enabled == 'true' }}
-          tags: ${{ steps.set_tags.outputs.tags }}
-          labels: "default-label"
+          push: true
+          tags: ${{ steps.meta-batch.outputs.tags }}
+          labels: ${{ steps.meta-batch.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build API image (build and optionally push)
+      - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile.api
-          push: ${{ steps.check_secrets.outputs.push_enabled == 'true' }}
-          tags: ${{ steps.set_tags.outputs.api_tags }}
-          labels: "default-label"
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
