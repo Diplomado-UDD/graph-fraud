@@ -33,15 +33,30 @@ jobs:
       - name: Build and start stack with Docker Compose
         run: |
           docker compose up -d --build
-          # wait a bit for services to start
-          sleep 15
+          # give services a little more time to initialize before health checks
+          sleep 60
 
-      - name: Run health check script
+      - name: Run health check script (with retries)
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          # Fail fast: run the health-check and capture output; if it fails, print the report and stop the job
-          if ! uv run python scripts/check_system_health.py > health-report.txt; then
-            cat health-report.txt
+          # Retry the health-check several times to allow services to finish booting.
+          MAX_RETRIES=30
+          SLEEP_SECONDS=10
+          PASSED=0
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES"
+            if uv run python scripts/check_system_health.py > health-report.txt 2>&1; then
+              echo "Health check passed on attempt $i"
+              PASSED=1
+              break
+            else
+              echo "Health check failed on attempt $i, sleeping $SLEEP_SECONDS seconds"
+              sleep $SLEEP_SECONDS
+            fi
+          done
+          if [ "$PASSED" -ne 1 ]; then
+            echo "Health check did not pass after $MAX_RETRIES attempts. Last report:"
+            cat health-report.txt || true
             exit 1
           fi
 
