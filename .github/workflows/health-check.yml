@@ -36,6 +36,11 @@ jobs:
           # give services a little more time to initialize before health checks
           sleep 60
 
+      - name: Generate dataset in container
+        run: |
+          # Generate dataset inside the API container so training has data to work with
+          docker compose run --rm graph-rag-api uv run python scripts/generate_data.py
+
       - name: Run health check script (with retries)
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -68,13 +73,13 @@ jobs:
       - name: Run training pipeline (integration)
         run: |
           # Run training inside the graph-rag-api container with a timeout to avoid long-running jobs
-          # If training exceeds 20 minutes the step will fail.
-          timeout 20m docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/train_fraud_detector.py
+          # Reduced timeout to 10 minutes and use shorter dataset for CI
+          timeout 10m docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/train_fraud_detector.py
 
       - name: Run batch scoring (integration)
         run: |
-          # Batch scoring should also be bounded; use a 10 minute timeout
-          timeout 10m docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/batch_scoring.py
+          # Batch scoring should also be bounded; use a 5 minute timeout
+          timeout 5m docker compose run --rm -e MLFLOW_TRACKING_URI=http://fraud-mlflow:5000 graph-rag-api uv run python scripts/batch_scoring.py
 
       - name: Export MLflow runs (post-integration)
         run: |
