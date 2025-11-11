@@ -18,7 +18,7 @@ class FraudDatasetGenerator:
         self.fraud_rings: List[List[int]] = []
 
     def generate_users(
-        self, n_users: int = 200, fraud_rate: float = 0.15
+        self, n_users: int = 200, fraud_rate: float = 0.02
     ) -> pd.DataFrame:
         """Generate user entities."""
         n_fraudsters = int(n_users * fraud_rate)
