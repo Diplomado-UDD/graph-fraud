@@ -453,9 +453,9 @@ Sí, API REST estándar se integra con cualquier sistema.
 
 **Para agendar demo o discutir piloto:**
 
-📧 Email: fraud-detection@example.com
-📞 Teléfono: +1 (555) 123-4567
-🌐 Web: www.graph-fraud-detection.com
+📧 Email: [email]
+📞 Teléfono: [telefono]
+🌐 Web: [web]
 
 **Materiales adicionales:**
 - White paper técnico (disponible bajo NDA)
