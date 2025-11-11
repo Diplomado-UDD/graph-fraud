@@ -37,7 +37,7 @@ This project showcases a **complete end-to-end MLOps pipeline** for fraud detect
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/ggoni/graph-fraud.git
 cd graph-fraud
 
 # Install dependencies with locked versions
