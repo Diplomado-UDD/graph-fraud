@@ -1,8 +1,5 @@
 # Graph-Based Fraud Detection - Production MLOps Pipeline
 
-[![CI Pipeline](https://github.com/Diplomado-UDD/graph-fraud/actions/workflows/ci.yml/badge.svg)](https://github.com/Diplomado-UDD/graph-fraud/actions/workflows/ci.yml)
-[![Deploy Pipeline](https://github.com/Diplomado-UDD/graph-fraud/actions/workflows/deploy.yml/badge.svg)](https://github.com/Diplomado-UDD/graph-fraud/actions/workflows/deploy.yml)
-
 Educational fraud detection system demonstrating production-grade MLOps practices with graph-based machine learning and Graph RAG.
 
 **Test Coverage**: 44/44 tests passing (100%) | **Model Performance**: 88.2% precision, 100% recall, F1-score 0.938
