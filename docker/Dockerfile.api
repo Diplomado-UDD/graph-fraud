@@ -23,6 +23,8 @@ RUN uv sync --locked --no-dev
 # Copy application code
 COPY src/ ./src/
 COPY config.py ./
+# Copy scripts so we can run training/batch-scoring inside the container
+COPY scripts/ ./scripts/
 
 # Create necessary directories
 RUN mkdir -p data/raw data/processed outputs

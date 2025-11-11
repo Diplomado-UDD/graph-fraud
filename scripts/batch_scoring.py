@@ -13,6 +13,7 @@ import json
 from datetime import datetime
 import config
 from src.models.neo4j_graph_builder import Neo4jFraudGraph
+from src.models.graph_builder import FraudGraph
 from src.models.fraud_detector import FraudDetector
 
 
@@ -41,9 +42,13 @@ def batch_score_users():
     # Load dataset
     dataset = load_latest_dataset()
 
+    # Build NetworkX graph for fraud detection
+    nx_graph = FraudGraph()
+    nx_graph.build_from_dataset(dataset)
+
     # Initialize detector
     print("Running fraud detection...")
-    detector = FraudDetector(neo4j_graph)
+    detector = FraudDetector(nx_graph)
     report = detector.generate_fraud_report(
         dataset["transactions"],
         risk_threshold=config.RISK_THRESHOLD

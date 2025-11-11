@@ -29,4 +29,5 @@ dependencies = [
     "pytest-cov>=7.0.0",
     "seaborn>=0.13.2",
     "plotly>=6.4.0",
+    "pyvis>=0.3.2",
 ]

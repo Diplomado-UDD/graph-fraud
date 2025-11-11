@@ -1,0 +1,51 @@
+Checking HTTP services:
+ - api: OK
+ - mlflow: OK
+ - prometheus: OK
+ - grafana: OK
+ - neo4j: OK
+ - neo4j_bolt: OK
+
+Checking Docker containers:
+ - fraud-neo4j: fraud-neo4j Up 2 hours (healthy)
+ - fraud-mlflow: fraud-mlflow Up 18 minutes (health: starting)
+ - fraud-prometheus: fraud-prometheus Up 2 hours
+ - fraud-grafana: fraud-grafana Up About an hour
+ - fraud-graph-rag-api: fraud-graph-rag-api Up 46 seconds (healthy)
+
+Summary JSON:
+{
+  "http": {
+    "api": {
+      "ok": true,
+      "info": "{\"status\":\"healthy\",\"neo4j\":\"connected\",\"graph_nodes\":482,\"graph_edges\":1045}"
+    },
+    "mlflow": {
+      "ok": true,
+      "info": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1,shrink-to-fit=no\"/><link rel=\"shortcut icon\" href=\"./static-files/favicon.ico\"/><meta name=\"theme-color\" content=\"#000000\"/><link rel=\"manifest\" href=\"./static-files/manifest.json\"/><title>MLflow</title><script defer=\"defer\" src=\"static-files/static/js/main.2dfd8740.js\"></script><link href=\"static-files/static/css/main.c3fe171a.css\" rel=\"stylesheet\"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id=\"root\"></div><div id=\"modal\"></div></body></html>"
+    },
+    "prometheus": {
+      "ok": true,
+      "info": "Prometheus Server is Ready.\n"
+    },
+    "grafana": {
+      "ok": true,
+      "info": "{\n  \"database\": \"ok\",\n  \"version\": \"12.2.1\",\n  \"commit\": \"563109b696e9c1cbaf345f2ab7a11f7f78422982\"\n}"
+    },
+    "neo4j": {
+      "ok": true,
+      "info": "{\"bolt_routing\":\"neo4j://localhost:7687\",\"query\":\"http://localhost:7474/db/{databaseName}/query/v2\",\"transaction\":\"http://localhost:7474/db/{databaseName}/tx\",\"bolt_direct\":\"bolt://localhost:7687\",\"neo4j_version\":\"2025.10.1\",\"neo4j_edition\":\"community\"}"
+    },
+    "neo4j_bolt": {
+      "ok": true,
+      "info": "Bolt OK (checked inside container): BOLT_OK"
+    }
+  },
+  "docker": {
+    "fraud-neo4j": "fraud-neo4j Up 2 hours (healthy)",
+    "fraud-mlflow": "fraud-mlflow Up 18 minutes (health: starting)",
+    "fraud-prometheus": "fraud-prometheus Up 2 hours",
+    "fraud-grafana": "fraud-grafana Up About an hour",
+    "fraud-graph-rag-api": "fraud-graph-rag-api Up 46 seconds (healthy)"
+  }
+}

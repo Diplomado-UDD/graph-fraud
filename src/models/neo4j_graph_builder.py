@@ -3,6 +3,7 @@
 from typing import Dict, Optional
 import pandas as pd
 from neo4j import GraphDatabase
+import networkx as nx
 
 
 class Neo4jFraudGraph:
@@ -12,6 +13,10 @@ class Neo4jFraudGraph:
         """Initialize Neo4j connection."""
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
         self._verify_connection()
+        # Keep an in-memory NetworkX representation so other components (FraudDetector)
+        # can operate on a NetworkX graph even when the canonical store is Neo4j.
+        self.G = nx.MultiDiGraph()
+        self.transaction_network = nx.DiGraph()
 
     def _verify_connection(self):
         """Verify Neo4j connection is working."""
@@ -100,9 +105,48 @@ class Neo4jFraudGraph:
                         receiver_id=txn["receiver_id"],
                         transaction_id=txn["transaction_id"],
                         amount=float(txn["amount"]),
-                        timestamp=txn["timestamp"].isoformat(),
+                        timestamp=str(txn["timestamp"]).replace(" ", "T"),
                         is_fraudulent=bool(txn["is_fraudulent"])
                     )
+
+        # Also build an in-memory NetworkX graph mirror for algorithms that expect NetworkX
+        # User nodes
+        for _, user in users_df.iterrows():
+            uid = user["user_id"]
+            self.G.add_node(uid, node_type="user", is_fraudster=bool(user["is_fraudster"]), account_age_days=int(user["account_age_days"]))
+            # transaction network uses users only
+            self.transaction_network.add_node(uid, is_fraudster=bool(user["is_fraudster"]))
+
+        # Device nodes
+        for _, device in devices_df.iterrows():
+            did = device["device_id"]
+            self.G.add_node(did, node_type="device", device_type=device.get("device_type"))
+
+        # User-device edges
+        for _, rel in user_devices_df.iterrows():
+            uid = rel["user_id"]
+            did = rel["device_id"]
+            # Add in Neo4j we already created; mirror in NetworkX
+            if uid not in self.G:
+                self.G.add_node(uid, node_type="user")
+            if did not in self.G:
+                self.G.add_node(did, node_type="device")
+            self.G.add_edge(uid, did, relation="USES_DEVICE")
+
+        # Transactions -> transaction_network (directed)
+        for _, txn in transactions_df.iterrows():
+            if txn["status"] == "completed":
+                s = txn["sender_id"]
+                r = txn["receiver_id"]
+                tid = txn["transaction_id"]
+                amt = float(txn["amount"])
+                is_fraud = bool(txn["is_fraudulent"])
+                # ensure nodes
+                if s not in self.transaction_network:
+                    self.transaction_network.add_node(s, is_fraudster=False)
+                if r not in self.transaction_network:
+                    self.transaction_network.add_node(r, is_fraudster=False)
+                self.transaction_network.add_edge(s, r, transaction_id=tid, amount=amt, is_fraudulent=is_fraud)
 
     def get_shared_devices(self) -> Dict[str, list]:
         """Find devices shared by multiple users."""
@@ -225,3 +269,48 @@ class Neo4jFraudGraph:
             session.run("CALL gds.graph.drop('transactionGraph')")
 
             return pd.DataFrame(data)
+
+    def load_networkx_from_neo4j(self) -> None:
+        """Populate the in-memory NetworkX graphs from the current Neo4j database state."""
+        # Clear existing in-memory graphs
+        self.G = nx.MultiDiGraph()
+        self.transaction_network = nx.DiGraph()
+
+        with self.driver.session() as session:
+            # Load users
+            users = session.run("MATCH (u:User) RETURN u.user_id AS user_id, u.is_fraudster AS is_fraudster, u.account_age_days AS account_age_days")
+            for rec in users:
+                uid = rec["user_id"]
+                self.G.add_node(uid, node_type="user", is_fraudster=bool(rec.get("is_fraudster", False)), account_age_days=int(rec.get("account_age_days") or 0))
+                self.transaction_network.add_node(uid, is_fraudster=bool(rec.get("is_fraudster", False)))
+
+            # Load devices
+            devices = session.run("MATCH (d:Device) RETURN d.device_id AS device_id, d.device_type AS device_type")
+            for rec in devices:
+                did = rec["device_id"]
+                self.G.add_node(did, node_type="device", device_type=rec.get("device_type"))
+
+            # Load user-device relationships
+            uds = session.run("MATCH (u:User)-[:USES_DEVICE]->(d:Device) RETURN u.user_id AS user_id, d.device_id AS device_id")
+            for rec in uds:
+                uid = rec["user_id"]
+                did = rec["device_id"]
+                if uid not in self.G:
+                    self.G.add_node(uid, node_type="user")
+                if did not in self.G:
+                    self.G.add_node(did, node_type="device")
+                self.G.add_edge(uid, did, relation="USES_DEVICE")
+
+            # Load transactions
+            txns = session.run("MATCH (s:User)-[t:TRANSACTED]->(r:User) RETURN s.user_id AS sender, r.user_id AS receiver, t.transaction_id AS transaction_id, t.amount AS amount, t.is_fraudulent AS is_fraudulent")
+            for rec in txns:
+                s = rec["sender"]
+                r = rec["receiver"]
+                tid = rec.get("transaction_id")
+                amt = float(rec.get("amount") or 0)
+                is_fraud = bool(rec.get("is_fraudulent", False))
+                if s not in self.transaction_network:
+                    self.transaction_network.add_node(s, is_fraudster=False)
+                if r not in self.transaction_network:
+                    self.transaction_network.add_node(r, is_fraudster=False)
+                self.transaction_network.add_edge(s, r, transaction_id=tid, amount=amt, is_fraudulent=is_fraud)

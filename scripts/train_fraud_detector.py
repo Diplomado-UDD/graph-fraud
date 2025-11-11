@@ -15,6 +15,7 @@ from datetime import datetime
 import config
 from src.data.generate_dataset import FraudDatasetGenerator
 from src.models.neo4j_graph_builder import Neo4jFraudGraph
+from src.models.graph_builder import FraudGraph
 from src.models.fraud_detector import FraudDetector
 
 
@@ -62,7 +63,11 @@ def train_and_evaluate(neo4j_graph, dataset, risk_threshold=None):
 
     print(f"\nTraining fraud detector (threshold={risk_threshold})...")
 
-    detector = FraudDetector(neo4j_graph)
+    # Build NetworkX graph for fraud detection algorithms
+    nx_graph = FraudGraph()
+    nx_graph.build_from_dataset(dataset)
+
+    detector = FraudDetector(nx_graph)
     report = detector.generate_fraud_report(
         dataset["transactions"],
         risk_threshold=risk_threshold

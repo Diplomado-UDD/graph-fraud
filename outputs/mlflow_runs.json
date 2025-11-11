@@ -1,0 +1,73 @@
+[
+  {
+    "experiment_id": 0,
+    "name": "Default",
+    "runs": []
+  },
+  {
+    "experiment_id": 1,
+    "name": "fraud-detection",
+    "runs": [
+      {
+        "run_uuid": "59534f9bc5ed49d2aedcd0499a709dcd",
+        "artifact_uri": "/mlflow/artifacts/1/59534f9bc5ed49d2aedcd0499a709dcd/artifacts",
+        "status": "FINISHED",
+        "start_time": 1762813480910,
+        "params": {
+          "data_version": "v1.0",
+          "seed": "42",
+          "n_users": "200",
+          "n_transactions": "1000",
+          "risk_threshold": "0.15",
+          "device_risk_weight": "0.35",
+          "age_risk_weight": "0.25",
+          "amount_risk_weight": "0.2",
+          "volume_risk_weight": "0.1",
+          "centrality_risk_weight": "0.1",
+          "meets_criteria": "True"
+        },
+        "metrics": {
+          "precision": 0.8823529411764706,
+          "recall": 1.0,
+          "f1_score": 0.9375,
+          "true_positives": 30.0,
+          "false_positives": 4.0,
+          "total_fraudsters": 30.0,
+          "high_risk_users": 34.0,
+          "ring_members_detected": 14.0,
+          "solo_fraudsters_detected": 20.0
+        }
+      },
+      {
+        "run_uuid": "db8a602240644656bc1aa533090f2cba",
+        "artifact_uri": "/mlflow/artifacts/1/db8a602240644656bc1aa533090f2cba/artifacts",
+        "status": "FAILED",
+        "start_time": 1762813307652,
+        "params": {
+          "data_version": "v1.0",
+          "seed": "42",
+          "n_users": "200",
+          "n_transactions": "1000",
+          "risk_threshold": "0.15",
+          "device_risk_weight": "0.35",
+          "age_risk_weight": "0.25",
+          "amount_risk_weight": "0.2",
+          "volume_risk_weight": "0.1",
+          "centrality_risk_weight": "0.1",
+          "meets_criteria": "True"
+        },
+        "metrics": {
+          "precision": 0.8823529411764706,
+          "recall": 1.0,
+          "f1_score": 0.9375,
+          "true_positives": 30.0,
+          "false_positives": 4.0,
+          "total_fraudsters": 30.0,
+          "high_risk_users": 34.0,
+          "ring_members_detected": 14.0,
+          "solo_fraudsters_detected": 20.0
+        }
+      }
+    ]
+  }
+]
