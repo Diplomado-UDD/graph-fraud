@@ -1,6 +1,6 @@
 """Build graph structures in Neo4j from fraud detection data."""
 
-from typing import Dict, Optional
+from typing import Dict
 import pandas as pd
 from neo4j import GraphDatabase
 import networkx as nx
