@@ -104,3 +104,32 @@ jobs:
         with:
           name: health-report
           path: health-report.txt
+
+      - name: Collect Docker diagnostics on failure
+        if: failure()
+        run: |
+          echo "Collecting docker-compose status and container logs..."
+          docker compose ps --all > docker-compose-ps.txt || true
+          # collect combined logs (no color) for all services (tail to avoid huge uploads)
+          docker compose logs --no-color --tail=1000 > docker-compose-logs.txt || true
+          # collect per-service logs if present (best-effort)
+          SERVICES="fraud-neo4j fraud-mlflow graph-rag-api prometheus grafana"
+          for s in $SERVICES; do
+            echo "Collecting logs for $s"
+            docker compose logs --no-color --tail=200 $s > "logs_${s}.txt" || true
+          done
+        shell: bash
+
+      - name: Upload docker diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-diagnostics
+          path: |
+            docker-compose-ps.txt
+            docker-compose-logs.txt
+            logs_fraud-neo4j.txt
+            logs_fraud-mlflow.txt
+            logs_graph-rag-api.txt
+            logs_prometheus.txt
+            logs_grafana.txt
