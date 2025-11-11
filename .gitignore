@@ -17,3 +17,4 @@ wheels/
 # Neo4j
 neo4j/
 *.db
+test_business_es.pdf
