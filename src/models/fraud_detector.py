@@ -1,6 +1,6 @@
 """Fraud detection algorithms using graph analysis."""
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import community as community_louvain
 import networkx as nx

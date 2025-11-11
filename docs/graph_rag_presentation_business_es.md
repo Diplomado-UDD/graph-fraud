@@ -7,219 +7,221 @@ backgroundColor: '#ffffff'
 size: letter
 style: |
   section {
-    font-size: 24px;
+    font-size: 20px; /* Ajustado para US Letter */
+    margin: 0.5in 0.5in; /* Márgenes para ajustarse a la hoja */
   }
   img {
     display: block;
-    margin: 0 auto;
-    max-width: 90%;
-    max-height: 500px;
+    margin: 0 auto; /* Centrado */
+    max-width: 80%; /* Ajustado para que no desborde */
+    max-height: 400px; /* Ajustado para US Letter */
     object-fit: contain;
   }
   h1 {
-    font-size: 48px;
+    font-size: 36px; /* Ajustado para US Letter */
   }
   h2 {
-    font-size: 36px;
-    margin-bottom: 20px;
+    font-size: 28px; /* Ajustado para US Letter */
+    margin-bottom: 15px;
   }
   ul, ol {
-    font-size: 22px;
+    font-size: 18px; /* Ajustado para US Letter */
   }
   code {
-    font-size: 18px;
+    font-size: 16px; /* Ajustado para US Letter */
   }
 ---
 
-# Detección de Fraude con Inteligencia Artificial: Solución de Negocio con Graph RAG
+# Cómo una Empresa Transformó su Lucha Contra el Fraude
 
-_Una presentación enfocada en el valor de negocio, ROI y casos de uso empresariales._
-
----
-
-## Agenda
-
-- El problema: fraude en pagos digitales
-- Impacto en el negocio y costos del fraude
-- Limitaciones de las soluciones tradicionales
-- Nuestra solución: Graph RAG para detección de fraude
-- Resultados de negocio y métricas de éxito
-- Casos de uso y beneficios operacionales
-- Propuesta de valor y ROI
-- Próximos pasos
+_La historia de cómo pasamos de reaccionar a prevenir, y devolvimos la confianza a los clientes._
 
 ---
 
-## El problema del fraude en pagos digitales
+## Una historia que se repite
 
-- **Crecimiento exponencial**: El fraude digital creció 140% en los últimos 3 años
-- **Sofisticación**: Redes organizadas de fraudulentos operan a escala
-- **Impacto multi-dimensional**:
-  - Pérdidas monetarias directas
-  - Costos operacionales de investigación
-  - Riesgo regulatorio y multas
-  - Daño reputacional y pérdida de clientes
+**3:00 AM, lunes**
 
----
+El equipo de fraude descubre un anillo coordinado. Ya procesaron miles de dólares en transacciones fraudulentas.
 
-## Costos reales del fraude
+Son las mismas 12 personas usando los mismos 3 teléfonos.
 
-**Por cada $100 de fraude confirmado, las empresas pierden:**
-
-- $100 en pérdida directa
-- $50-80 en costos de investigación y remediación
-- $30-50 en penalidades regulatorias
-- $40-100 en pérdida de clientes (lifetime value)
-
-**Total: $220-330 por cada $100 de fraude**
-
-<small>Fuente: Estimaciones basadas en informes de la industria fintech 2024</small>
+**La pregunta:** ¿Por qué no lo vimos antes?
 
 ---
 
-## Desafíos con soluciones tradicionales
+## El impacto oculto del fraude
 
-**Sistemas basados en reglas:**
-- Alta tasa de falsos positivos (>30%)
-- No detectan patrones nuevos o complejos
-- Requieren actualización manual constante
+**No es solo el dinero perdido**
 
-**Machine Learning tradicional:**
-- Analiza transacciones de forma aislada
-- Pierde el contexto relacional (redes de fraude)
-- Difícil de explicar para equipos de investigación
+Cada caso de fraude afecta la confianza de los clientes, consume recursos valiosos y daña la reputación de la empresa.
 
----
+- **Pérdidas directas:** Dinero que no se recupera.
+- **Costos ocultos:** Tiempo del equipo, multas regulatorias, clientes que se van.
+- **Confianza perdida:** Una vez dañada, es difícil de recuperar.
 
-## ¿Por qué Graph RAG?
-
-**Graph (Grafo)**: Representa relaciones entre usuarios, dispositivos y transacciones
-- Detecta anillos de fraude compartiendo recursos
-- Identifica patrones multi-salto (A→B→C→fraude)
-- Visualiza comunidades sospechosas
-
-**RAG (Retrieval-Augmented Generation)**: Genera explicaciones en lenguaje natural
-- Investigadores reciben narrativas claras
-- Acelera triage y decisiones
-- Facilita cumplimiento regulatorio (auditorías)
+**El verdadero costo del fraude es mucho mayor de lo que parece.**
 
 ---
 
-## Cómo funciona: Flujo de detección
+## Por qué los sistemas actuales no son suficientes
 
-1. **Ingesta de datos**: Transacciones, usuarios, dispositivos en tiempo real
-2. **Construcción de grafo**: Relaciones automáticas entre entidades
-3. **Análisis de redes**: Algoritmos detectan comunidades y patrones sospechosos
-4. **Puntuación de riesgo**: Cada usuario recibe score 0-100
-5. **Generación de explicaciones**: IA produce resumen ejecutivo del riesgo
-6. **Acción**: Equipo de fraude prioriza casos de alto riesgo
+**El problema no es la tecnología, es la perspectiva.**
 
----
+Los sistemas tradicionales analizan transacciones individuales, pero el fraude moderno opera en red.
 
-## Señales de riesgo detectadas
+- Los estafadores colaboran, comparten dispositivos y cuentas.
+- Se mueven rápido, dejando pocas pistas.
+- Detectar un caso tarde significa que otros ya escaparon.
 
-**Compartición de dispositivos**
-- 5+ usuarios en mismo dispositivo = alta sospecha
-- Dispositivos "puente" conectan redes fraudulentas
-
-**Patrones de comunidad**
-- Usuarios agrupados con fraudulentos conocidos
-- Transacciones circulares entre miembros
-
-**Anomalías temporales**
-- Ráfagas de transacciones (10+ en 1 hora)
-- Patrones nocturnos inusuales
+**Necesitamos ver las conexiones, no solo los puntos.**
 
 ---
 
-## Resultados de negocio
+## La solución: Ver el panorama completo
 
-**Métricas de detección:**
-- **Precisión: 88.2%** → 9 de cada 10 alertas son fraude real
-- **Recall: 100%** → Capturamos todos los casos de fraude
-- **F1-score: 0.94** → Balance óptimo entre precisión y cobertura
+**Si los estafadores trabajan en red, nosotros también.**
 
-**Impacto operacional:**
-- Reducción de falsos positivos: **65%** vs sistema anterior
-- Tiempo de investigación: **-40%** (de 45 min a 27 min por caso)
-- Casos resueltos por analista: **+35%** (productividad)
+Imagine un sistema que:
+- Identifica usuarios que comparten dispositivos.
+- Detecta patrones sospechosos en transferencias.
+- Encuentra círculos cerrados de actividad fraudulenta.
+
+**Y lo explica de forma clara:**
+
+_"Usuario sospechoso por compartir dispositivo con 8 cuentas marcadas como fraudulentas y realizar transferencias circulares en las últimas horas."_
 
 ---
 
-## Distribución de riesgo: Priorización efectiva
+## Cómo lo logramos
 
-Mayoría de usuarios son legítimos; enfoque en cola de alto riesgo.
+**1. Conectamos los puntos**
+Cada transacción revela relaciones: quién envía a quién, desde qué dispositivo.
+
+**2. Identificamos patrones**
+Reconocemos comportamientos sospechosos, como transferencias circulares o uso compartido de dispositivos.
+
+**3. Puntuamos el riesgo**
+Asignamos un puntaje de 0 a 100 según la actividad detectada.
+
+**4. Explicamos el porqué**
+El equipo ve claramente qué disparó la alerta, sin cajas negras.
+
+---
+
+## Historias reales, resultados tangibles
+
+**Antes:**
+- Alertas poco precisas y difíciles de priorizar.
+- Investigaciones largas y frustrantes.
+- Fraude detectado días después de ocurrido.
+
+**Después:**
+- Alertas precisas que priorizan los casos críticos.
+- Investigaciones más rápidas y efectivas.
+- Fraude detectado en tiempo real, antes de causar daño.
+
+**El resultado:** Más confianza, menos pérdidas, y un equipo motivado.
+
+---
+
+## Enfoque donde importa
+
+La mayoría de sus usuarios son honestos. El problema es encontrar rápido a los que no lo son.
 
 ![width:700px](./images/risk_hist.png)
 
-<small>**Beneficio**: Equipos se enfocan en ~5% de usuarios de mayor riesgo, maximizando ROI de investigaciones.</small>
+**El sistema identifica automáticamente el 5% que necesita investigación inmediata.**
+
+Tu equipo deja de buscar agujas en pajares.
 
 ---
 
-## Top 10 usuarios de alto riesgo
+## Vista ejecutiva: Prioridades del día
 
-Priorización automática para triage inmediato.
+Cada mañana, tu equipo sabe exactamente por dónde empezar.
 
 ![width:700px](./images/top_users.png)
 
-<small>**Caso de uso**: Dashboard ejecutivo actualizado en tiempo real para gerentes de fraude.</small>
+Los 10 casos más urgentes, ordenados por riesgo real.
+
+No por volumen. No por azar. Por conexiones sospechosas confirmadas.
 
 ---
 
-## Compartición de dispositivos: Señal crítica
+## El poder de ver las redes
 
-Dispositivos conectando múltiples usuarios = red de colusión.
+Un teléfono compartido por 12 usuarios. 8 ya están marcados como fraudulentos.
 
 ![width:700px](./images/device_sharing.png)
 
-<small>**Acción**: Bloqueo preventivo de dispositivos sospechosos, reducción de exposición.</small>
+**Antes:** Investigábamos a cada uno por separado, sin ver el patrón.
+
+**Ahora:** Una alerta captura toda la red. Acción inmediata.
 
 ---
 
-## Visualización de redes: Vista ejecutiva
+## Mapas que hablan por sí solos
 
-Usuarios (azul) y dispositivos (verde) con sus conexiones.
+Azul = usuarios. Verde = dispositivos. Las líneas = las conexiones que importan.
 
 ![width:650px](./images/graph_overview.png)
 
-<small>**Valor**: Presentaciones ejecutivas y reportes regulatorios con evidencia visual clara.</small>
+**Para reuniones ejecutivas:**
+Una imagen que muestra el problema completo. Sin hojas de cálculo.
+
+**Para auditorías:**
+Evidencia visual que cumple con requisitos regulatorios.
 
 ---
 
-## Detección de comunidades fraudulentas
+## Encontrando los círculos criminales
 
-Algoritmos identifican grupos coordinados (coloreados por anillo).
+Cada color es un grupo que opera coordinado.
 
 ![width:650px](./images/graph_communities.png)
 
-<small>**Beneficio**: Desmontaje de redes completas en lugar de casos individuales (efecto multiplicador).</small>
+**El beneficio multiplicador:**
+
+Antes bloqueábamos 1 usuario a la vez.
+
+Ahora bloqueamos redes completas de 10-15 miembros.
+
+Un caso, diez soluciones.
 
 ---
 
-## Contexto de investigación: Vecindario de transacciones
+## Investigaciones que se hacen solas
 
-Rojo (usuario señalado), naranja (dispositivos), azul (otros usuarios).
+El usuario en rojo disparó la alerta. El sistema ya encontró todas sus conexiones.
 
 ![width:650px](./images/transaction_path.png)
 
-<small>**Productividad**: Investigadores ven contexto completo en segundos, no horas de búsqueda manual.</small>
+**Lo que antes tomaba 2 horas de búsqueda manual:**
+- ¿Con quién ha transaccionado?
+- ¿Qué dispositivos usa?
+- ¿Hay otros usuarios conectados?
+
+**Ahora son 15 segundos.**
 
 ---
 
-## Propuesta de valor: ROI estimado
+## La matemática simple
 
-**Inversión inicial (año 1):**
-- Implementación y configuración: $80,000
-- Licencias y capacitación: $40,000
-- **Total: $120,000**
+**Lo que cuesta:**
+- Implementación: $120,000 primer año
+- Incluye capacitación del equipo
 
-**Beneficios anuales (conservador):**
-- Reducción de pérdidas por fraude (25% mejora): $500,000
-- Ahorro en costos de investigación (40% eficiencia): $200,000
-- Reducción de multas regulatorias: $100,000
-- **Total beneficios: $800,000/año**
+**Lo que ahorras (estimación conservadora):**
+- $500,000 menos pérdidas por fraude _(solo reduciendo 25%)_
+- $200,000 en tiempo de investigación _(analistas más eficientes)_
+- $100,000 en multas evitadas _(mejor compliance)_
 
-**ROI año 1: 567%** | **Payback: ~2 meses**
+**Total beneficio año 1: $800,000**
+
+**Recuperas la inversión en 2 meses.**
+
+Cada $1 invertido devuelve $6.67 el primer año.
 
 ---
 

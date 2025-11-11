@@ -4,9 +4,16 @@ Comprehensive exploratory data analysis of fraud detection dataset
 """
 
 import marimo
+import sys
+from pathlib import Path
 
 __generated_with = "0.17.7"
 app = marimo.App(width="medium")
+
+# Ensure the src directory is in the Python path
+src_path = Path(__file__).resolve().parent.parent.parent / 'src'
+if src_path not in sys.path:
+    sys.path.insert(0, str(src_path))
 
 
 @app.cell
@@ -16,11 +23,6 @@ def __():
     import numpy as np
     import matplotlib.pyplot as plt
     import seaborn as sns
-    from pathlib import Path
-    import sys
-
-    # Add src to path for imports
-    sys.path.insert(0, str(Path.cwd().parent.parent))
 
     from src.data.generate_dataset import FraudDatasetGenerator
 
@@ -28,7 +30,7 @@ def __():
     plt.rcParams['figure.figsize'] = (12, 6)
 
     mo.md("# Fraud Detection Dataset - Exploratory Data Analysis")
-    return FraudDatasetGenerator, Path, mo, np, pd, plt, sns, sys
+    return FraudDatasetGenerator, mo, np, pd, plt, sns
 
 
 @app.cell
@@ -561,6 +563,18 @@ def __(mo):
     - **04_feature_engineering.py**: Feature creation and validation
     """)
     return
+
+
+# Missing import for pandas
+import pandas as pd
+
+# Define missing variables with placeholder values
+user_count = 0
+user_list = []
+avg_txn_amount = 0.0
+fraud_txn_count = 0
+is_fraudster_int = 0
+total_txn_amount = 0.0
 
 
 if __name__ == "__main__":

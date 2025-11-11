@@ -1,6 +1,6 @@
 """Graph RAG - Query interface for fraud detection graph."""
 
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 import pandas as pd
 
@@ -213,10 +213,10 @@ class GraphRAG:
         if len(high_risk_users) == 0:
             return {"precision": 0.0, "recall": 0.0}
 
-        true_positives = len(high_risk_users[high_risk_users["is_fraudster"] == True])
-        false_positives = len(high_risk_users[high_risk_users["is_fraudster"] == False])
+        true_positives = len(high_risk_users[high_risk_users["is_fraudster"]])
+        false_positives = len(high_risk_users[~high_risk_users["is_fraudster"]])
 
-        total_fraudsters = len(risk_df[risk_df["is_fraudster"] == True])
+        total_fraudsters = len(risk_df[risk_df["is_fraudster"]])
 
         precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
         recall = true_positives / total_fraudsters if total_fraudsters > 0 else 0
