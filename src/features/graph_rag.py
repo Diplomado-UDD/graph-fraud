@@ -47,8 +47,8 @@ class GraphRAG:
 
         # Get transaction stats
         user_txns = self.dataset["transactions"][
-            (self.dataset["transactions"]["sender_id"] == user_id) |
-            (self.dataset["transactions"]["receiver_id"] == user_id)
+            (self.dataset["transactions"]["sender_id"] == user_id)
+            | (self.dataset["transactions"]["receiver_id"] == user_id)
         ]
 
         return {
@@ -56,11 +56,15 @@ class GraphRAG:
             "is_fraudster": user_attrs.get("is_fraudster"),
             "account_age_days": user_attrs.get("account_age_days"),
             "verification_level": user_attrs.get("verification_level"),
-            "connected_users": len([n for n in neighbors if self.G.nodes[n].get("node_type") == "user"]),
+            "connected_users": len(
+                [n for n in neighbors if self.G.nodes[n].get("node_type") == "user"]
+            ),
             "devices": devices,
             "total_transactions": len(user_txns),
             "sent_transactions": len(user_txns[user_txns["sender_id"] == user_id]),
-            "received_transactions": len(user_txns[user_txns["receiver_id"] == user_id]),
+            "received_transactions": len(
+                user_txns[user_txns["receiver_id"] == user_id]
+            ),
         }
 
     def _query_user_connections(self, user_id: str, depth: int = 1) -> Dict[str, Any]:
@@ -70,8 +74,14 @@ class GraphRAG:
 
         subgraph = self.fraud_graph.get_user_subgraph(user_id, depth)
 
-        users = [n for n in subgraph.nodes() if subgraph.nodes[n].get("node_type") == "user"]
-        devices = [n for n in subgraph.nodes() if subgraph.nodes[n].get("node_type") == "device"]
+        users = [
+            n for n in subgraph.nodes() if subgraph.nodes[n].get("node_type") == "user"
+        ]
+        devices = [
+            n
+            for n in subgraph.nodes()
+            if subgraph.nodes[n].get("node_type") == "device"
+        ]
 
         fraudsters = [n for n in users if subgraph.nodes[n].get("is_fraudster")]
 
@@ -81,7 +91,8 @@ class GraphRAG:
             "connected_users": len(users) - 1,  # Exclude self
             "shared_devices": len(devices),
             "fraudsters_in_network": len([u for u in fraudsters if u != user_id]),
-            "fraud_exposure_rate": len([u for u in fraudsters if u != user_id]) / max(len(users) - 1, 1),
+            "fraud_exposure_rate": len([u for u in fraudsters if u != user_id])
+            / max(len(users) - 1, 1),
             "subgraph_nodes": list(subgraph.nodes()),
         }
 
@@ -89,7 +100,9 @@ class GraphRAG:
         """Calculate fraud risk for user."""
         centrality_df = self.fraud_detector.calculate_centrality_scores()
         shared_resources = self.fraud_detector.detect_shared_resources()
-        risk_df = self.fraud_detector.compute_risk_scores(centrality_df, shared_resources, self.dataset["transactions"])
+        risk_df = self.fraud_detector.compute_risk_scores(
+            centrality_df, shared_resources, self.dataset["transactions"]
+        )
 
         user_risk = risk_df[risk_df["user_id"] == user_id]
 
@@ -99,10 +112,7 @@ class GraphRAG:
         user_risk_row = user_risk.iloc[0]
 
         # Find if user shares devices
-        shared_device_info = [
-            r for r in shared_resources
-            if user_id in r["shared_by"]
-        ]
+        shared_device_info = [r for r in shared_resources if user_id in r["shared_by"]]
 
         risk_factors = []
         if user_risk_row["pagerank_norm"] > 0.5:
@@ -115,7 +125,11 @@ class GraphRAG:
         return {
             "user_id": user_id,
             "risk_score": float(user_risk_row["risk_score"]),
-            "risk_level": "HIGH" if user_risk_row["risk_score"] > 0.5 else "MEDIUM" if user_risk_row["risk_score"] > 0.3 else "LOW",
+            "risk_level": (
+                "HIGH"
+                if user_risk_row["risk_score"] > 0.5
+                else "MEDIUM" if user_risk_row["risk_score"] > 0.3 else "LOW"
+            ),
             "pagerank": float(user_risk_row["pagerank"]),
             "betweenness": float(user_risk_row["betweenness"]),
             "device_risk": float(user_risk_row["device_risk"]),
@@ -134,7 +148,9 @@ class GraphRAG:
             "all_shared_devices": shared_resources[:10],  # Top 10
         }
 
-    def _query_transaction_path(self, source: str, target: str, max_depth: int = 3) -> Dict[str, Any]:
+    def _query_transaction_path(
+        self, source: str, target: str, max_depth: int = 3
+    ) -> Dict[str, Any]:
         """Find transaction paths between users."""
         paths = self.fraud_graph.get_transaction_paths(source, target, max_depth)
 
@@ -161,8 +177,7 @@ class GraphRAG:
             community_members = [u for u, c in communities.items() if c == community_id]
 
             fraudsters = [
-                u for u in community_members
-                if self.G.nodes[u].get("is_fraudster")
+                u for u in community_members if self.G.nodes[u].get("is_fraudster")
             ]
 
             return {
@@ -181,28 +196,45 @@ class GraphRAG:
 
             return {
                 "total_communities": len(set(communities.values())),
-                "avg_community_size": sum(community_sizes.values()) / len(community_sizes),
+                "avg_community_size": sum(community_sizes.values())
+                / len(community_sizes),
                 "largest_community_size": max(community_sizes.values()),
-                "community_distribution": dict(sorted(community_sizes.items(), key=lambda x: x[1], reverse=True)[:5]),
+                "community_distribution": dict(
+                    sorted(community_sizes.items(), key=lambda x: x[1], reverse=True)[
+                        :5
+                    ]
+                ),
             }
 
-    def _query_suspicious_patterns(self, top_n: int = 10, risk_threshold: float = 0.15) -> Dict[str, Any]:
+    def _query_suspicious_patterns(
+        self, top_n: int = 10, risk_threshold: float = 0.15
+    ) -> Dict[str, Any]:
         """Identify suspicious patterns in the graph."""
         centrality_df = self.fraud_detector.calculate_centrality_scores()
         shared_resources = self.fraud_detector.detect_shared_resources()
-        risk_df = self.fraud_detector.compute_risk_scores(centrality_df, shared_resources, self.dataset["transactions"])
+        risk_df = self.fraud_detector.compute_risk_scores(
+            centrality_df, shared_resources, self.dataset["transactions"]
+        )
 
         high_risk = risk_df[risk_df["risk_score"] > risk_threshold].head(top_n)
 
         patterns = {
-            "high_risk_users": high_risk[["user_id", "risk_score", "is_fraudster"]].to_dict("records"),
-            "shared_device_clusters": [r for r in shared_resources if r["shared_by_count"] > 2][:5],
-            "detection_accuracy": self._calculate_detection_accuracy(risk_df, risk_threshold),
+            "high_risk_users": high_risk[
+                ["user_id", "risk_score", "is_fraudster"]
+            ].to_dict("records"),
+            "shared_device_clusters": [
+                r for r in shared_resources if r["shared_by_count"] > 2
+            ][:5],
+            "detection_accuracy": self._calculate_detection_accuracy(
+                risk_df, risk_threshold
+            ),
         }
 
         return patterns
 
-    def _calculate_detection_accuracy(self, risk_df: pd.DataFrame, risk_threshold: float = 0.15) -> Dict[str, float]:
+    def _calculate_detection_accuracy(
+        self, risk_df: pd.DataFrame, risk_threshold: float = 0.15
+    ) -> Dict[str, float]:
         """Calculate how well risk scores identify actual fraudsters."""
         if risk_df.empty:
             return {}
@@ -218,11 +250,19 @@ class GraphRAG:
 
         total_fraudsters = len(risk_df[risk_df["is_fraudster"]])
 
-        precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+        precision = (
+            true_positives / (true_positives + false_positives)
+            if (true_positives + false_positives) > 0
+            else 0
+        )
         recall = true_positives / total_fraudsters if total_fraudsters > 0 else 0
 
         return {
             "precision": round(precision, 3),
             "recall": round(recall, 3),
-            "f1_score": round(2 * (precision * recall) / (precision + recall), 3) if (precision + recall) > 0 else 0,
+            "f1_score": (
+                round(2 * (precision * recall) / (precision + recall), 3)
+                if (precision + recall) > 0
+                else 0
+            ),
         }

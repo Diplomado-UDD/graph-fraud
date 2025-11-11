@@ -13,7 +13,6 @@ import pandas as pd
 import json
 from datetime import datetime
 import config
-from src.data.generate_dataset import FraudDatasetGenerator
 from src.models.neo4j_graph_builder import Neo4jFraudGraph
 from src.models.graph_builder import FraudGraph
 from src.models.fraud_detector import FraudDetector
@@ -30,7 +29,9 @@ def load_dataset():
         else:
             raise FileNotFoundError(f"Dataset file not found: {file_path}")
 
-    print(f"  Loaded {len(dataset['users'])} users, {len(dataset['transactions'])} transactions")
+    print(
+        f"  Loaded {len(dataset['users'])} users, {len(dataset['transactions'])} transactions"
+    )
     return dataset
 
 
@@ -38,9 +39,7 @@ def build_neo4j_graph(dataset):
     """Build Neo4j graph from dataset"""
     print("\nBuilding Neo4j graph...")
     neo4j_graph = Neo4jFraudGraph(
-        uri=config.NEO4J_URI,
-        user=config.NEO4J_USER,
-        password=config.NEO4J_PASSWORD
+        uri=config.NEO4J_URI, user=config.NEO4J_USER, password=config.NEO4J_PASSWORD
     )
 
     # Clear existing data
@@ -69,25 +68,31 @@ def train_and_evaluate(neo4j_graph, dataset, risk_threshold=None):
 
     detector = FraudDetector(nx_graph)
     report = detector.generate_fraud_report(
-        dataset["transactions"],
-        risk_threshold=risk_threshold
+        dataset["transactions"], risk_threshold=risk_threshold
     )
 
     # Calculate metrics
     risk_df = report["risk_scores"]
     high_risk = risk_df[risk_df["risk_score"] > risk_threshold]
 
-    true_positives = len(high_risk[high_risk["is_fraudster"] == True])
-    false_positives = len(high_risk[high_risk["is_fraudster"] == False])
-    total_fraudsters = len(risk_df[risk_df["is_fraudster"] == True])
+    true_positives = len(high_risk[high_risk["is_fraudster"]])
+    false_positives = len(high_risk[~high_risk["is_fraudster"]])
+    total_fraudsters = len(risk_df[risk_df["is_fraudster"]])
 
     precision = true_positives / len(high_risk) if len(high_risk) > 0 else 0
     recall = true_positives / total_fraudsters if total_fraudsters > 0 else 0
-    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    f1_score = (
+        2 * (precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0
+    )
 
     # Detection breakdown
-    ring_members = sum(1 for uid in report["high_risk_users"]
-                      if risk_df[risk_df["user_id"] == uid]["device_risk"].values[0] > 0.5)
+    ring_members = sum(
+        1
+        for uid in report["high_risk_users"]
+        if risk_df[risk_df["user_id"] == uid]["device_risk"].values[0] > 0.5
+    )
     solo_fraudsters = len(report["high_risk_users"]) - ring_members
 
     metrics = {
@@ -99,7 +104,7 @@ def train_and_evaluate(neo4j_graph, dataset, risk_threshold=None):
         "total_fraudsters": total_fraudsters,
         "high_risk_users": len(report["high_risk_users"]),
         "ring_members_detected": ring_members,
-        "solo_fraudsters_detected": solo_fraudsters
+        "solo_fraudsters_detected": solo_fraudsters,
     }
 
     print(f"  Precision: {precision:.3f}")
@@ -132,10 +137,10 @@ def save_model_artifacts(report, metrics, dataset_version):
             "age_risk": config.AGE_RISK_WEIGHT,
             "amount_risk": config.AMOUNT_RISK_WEIGHT,
             "volume_risk": config.VOLUME_RISK_WEIGHT,
-            "centrality_risk": config.CENTRALITY_RISK_WEIGHT
+            "centrality_risk": config.CENTRALITY_RISK_WEIGHT,
         },
         "metrics": metrics,
-        "trained_at": datetime.now().isoformat()
+        "trained_at": datetime.now().isoformat(),
     }
 
     metadata_path = model_dir / "model_metadata.json"
@@ -165,20 +170,24 @@ def main():
     neo4j_graph = build_neo4j_graph(dataset)
 
     # Start MLflow run
-    with mlflow.start_run(run_name=f"training_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+    with mlflow.start_run(
+        run_name=f"training_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    ):
         # Log parameters
-        mlflow.log_params({
-            "data_version": dataset_metadata["version"],
-            "seed": config.SEED,
-            "n_users": config.N_USERS,
-            "n_transactions": config.N_TRANSACTIONS,
-            "risk_threshold": config.RISK_THRESHOLD,
-            "device_risk_weight": config.DEVICE_RISK_WEIGHT,
-            "age_risk_weight": config.AGE_RISK_WEIGHT,
-            "amount_risk_weight": config.AMOUNT_RISK_WEIGHT,
-            "volume_risk_weight": config.VOLUME_RISK_WEIGHT,
-            "centrality_risk_weight": config.CENTRALITY_RISK_WEIGHT
-        })
+        mlflow.log_params(
+            {
+                "data_version": dataset_metadata["version"],
+                "seed": config.SEED,
+                "n_users": config.N_USERS,
+                "n_transactions": config.N_TRANSACTIONS,
+                "risk_threshold": config.RISK_THRESHOLD,
+                "device_risk_weight": config.DEVICE_RISK_WEIGHT,
+                "age_risk_weight": config.AGE_RISK_WEIGHT,
+                "amount_risk_weight": config.AMOUNT_RISK_WEIGHT,
+                "volume_risk_weight": config.VOLUME_RISK_WEIGHT,
+                "centrality_risk_weight": config.CENTRALITY_RISK_WEIGHT,
+            }
+        )
 
         # Train and evaluate
         detector, report, metrics = train_and_evaluate(neo4j_graph, dataset)
@@ -188,20 +197,26 @@ def main():
 
         # Check if model meets criteria
         meets_criteria = (
-            metrics["precision"] >= config.TARGET_PRECISION_MIN and
-            metrics["precision"] <= config.TARGET_PRECISION_MAX and
-            metrics["recall"] >= config.TARGET_RECALL_MIN
+            metrics["precision"] >= config.TARGET_PRECISION_MIN
+            and metrics["precision"] <= config.TARGET_PRECISION_MAX
+            and metrics["recall"] >= config.TARGET_RECALL_MIN
         )
 
         mlflow.log_param("meets_criteria", meets_criteria)
 
         if meets_criteria:
-            print(f"\n Model meets criteria!")
-            print(f"  Precision: {metrics['precision']:.3f} (target: {config.TARGET_PRECISION_MIN}-{config.TARGET_PRECISION_MAX})")
-            print(f"  Recall: {metrics['recall']:.3f} (target: >{config.TARGET_RECALL_MIN})")
+            print("\n Model meets criteria!")
+            print(
+                f"  Precision: {metrics['precision']:.3f} (target: {config.TARGET_PRECISION_MIN}-{config.TARGET_PRECISION_MAX})"
+            )
+            print(
+                f"  Recall: {metrics['recall']:.3f} (target: >{config.TARGET_RECALL_MIN})"
+            )
 
             # Save artifacts
-            model_dir = save_model_artifacts(report, metrics, dataset_metadata["version"])
+            model_dir = save_model_artifacts(
+                report, metrics, dataset_metadata["version"]
+            )
 
             # Log artifacts to MLflow
             mlflow.log_artifacts(str(model_dir))
@@ -209,9 +224,13 @@ def main():
             # Register model
             print("\n Model registered in MLflow")
         else:
-            print(f"\n Model does NOT meet criteria")
-            print(f"  Precision: {metrics['precision']:.3f} (target: {config.TARGET_PRECISION_MIN}-{config.TARGET_PRECISION_MAX})")
-            print(f"  Recall: {metrics['recall']:.3f} (target: >{config.TARGET_RECALL_MIN})")
+            print("\n Model does NOT meet criteria")
+            print(
+                f"  Precision: {metrics['precision']:.3f} (target: {config.TARGET_PRECISION_MIN}-{config.TARGET_PRECISION_MAX})"
+            )
+            print(
+                f"  Recall: {metrics['recall']:.3f} (target: >{config.TARGET_RECALL_MIN})"
+            )
 
     # Close Neo4j connection
     neo4j_graph.close()

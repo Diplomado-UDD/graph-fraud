@@ -12,22 +12,22 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 default_args = {
-    'owner': 'mlops',
-    'depends_on_past': False,
-    'start_date': datetime(2025, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 2,
-    'retry_delay': timedelta(minutes=2),
+    "owner": "mlops",
+    "depends_on_past": False,
+    "start_date": datetime(2025, 1, 1),
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 2,
+    "retry_delay": timedelta(minutes=2),
 }
 
 dag = DAG(
-    'batch_scoring_daily',
+    "batch_scoring_daily",
     default_args=default_args,
-    description='Daily batch scoring of all users',
-    schedule_interval='@daily',  # Every day at midnight
+    description="Daily batch scoring of all users",
+    schedule_interval="@daily",  # Every day at midnight
     catchup=False,
-    tags=['fraud-detection', 'scoring', 'batch'],
+    tags=["fraud-detection", "scoring", "batch"],
 )
 
 
@@ -44,9 +44,7 @@ def run_batch_scoring(**context):
 
     # Connect to Neo4j
     neo4j_graph = Neo4jFraudGraph(
-        uri=config.NEO4J_URI,
-        user=config.NEO4J_USER,
-        password=config.NEO4J_PASSWORD
+        uri=config.NEO4J_URI, user=config.NEO4J_USER, password=config.NEO4J_PASSWORD
     )
 
     # Load dataset
@@ -57,8 +55,7 @@ def run_batch_scoring(**context):
     # Run detection
     detector = FraudDetector(neo4j_graph)
     report = detector.generate_fraud_report(
-        dataset["transactions"],
-        risk_threshold=config.RISK_THRESHOLD
+        dataset["transactions"], risk_threshold=config.RISK_THRESHOLD
     )
 
     # Save results
@@ -69,12 +66,16 @@ def run_batch_scoring(**context):
 
     high_risk_output = config.OUTPUTS_DIR / f"high_risk_users_{timestamp}.json"
     with open(high_risk_output, "w") as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "risk_threshold": config.RISK_THRESHOLD,
-            "high_risk_users": report["high_risk_users"],
-            "count": len(report["high_risk_users"])
-        }, f, indent=2)
+        json.dump(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "risk_threshold": config.RISK_THRESHOLD,
+                "high_risk_users": report["high_risk_users"],
+                "count": len(report["high_risk_users"]),
+            },
+            f,
+            indent=2,
+        )
 
     print(f"Scored {len(report['risk_scores'])} users")
     print(f"High-risk users: {len(report['high_risk_users'])}")
@@ -82,15 +83,15 @@ def run_batch_scoring(**context):
     neo4j_graph.close()
 
     return {
-        "total_users": len(report['risk_scores']),
-        "high_risk_users": len(report['high_risk_users']),
-        "output_file": str(risk_scores_path)
+        "total_users": len(report["risk_scores"]),
+        "high_risk_users": len(report["high_risk_users"]),
+        "output_file": str(risk_scores_path),
     }
 
 
 # Define task
 scoring_task = PythonOperator(
-    task_id='run_batch_scoring',
+    task_id="run_batch_scoring",
     python_callable=run_batch_scoring,
     dag=dag,
 )

@@ -34,9 +34,7 @@ def batch_score_users():
     # Connect to Neo4j
     print("Connecting to Neo4j...")
     neo4j_graph = Neo4jFraudGraph(
-        uri=config.NEO4J_URI,
-        user=config.NEO4J_USER,
-        password=config.NEO4J_PASSWORD
+        uri=config.NEO4J_URI, user=config.NEO4J_USER, password=config.NEO4J_PASSWORD
     )
 
     # Load dataset
@@ -50,8 +48,7 @@ def batch_score_users():
     print("Running fraud detection...")
     detector = FraudDetector(nx_graph)
     report = detector.generate_fraud_report(
-        dataset["transactions"],
-        risk_threshold=config.RISK_THRESHOLD
+        dataset["transactions"], risk_threshold=config.RISK_THRESHOLD
     )
 
     # Generate outputs
@@ -72,12 +69,16 @@ def batch_score_users():
     # Save high-risk users list
     high_risk_output = config.OUTPUTS_DIR / f"high_risk_users_{timestamp}.json"
     with open(high_risk_output, "w") as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "risk_threshold": config.RISK_THRESHOLD,
-            "high_risk_users": high_risk_users,
-            "count": len(high_risk_users)
-        }, f, indent=2)
+        json.dump(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "risk_threshold": config.RISK_THRESHOLD,
+                "high_risk_users": high_risk_users,
+                "count": len(high_risk_users),
+            },
+            f,
+            indent=2,
+        )
     print(f"  Saved high-risk list: {high_risk_output}")
 
     # Close connection

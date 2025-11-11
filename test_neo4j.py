@@ -11,9 +11,7 @@ def main():
     # Initialize Neo4j connection
     print("1. Connecting to Neo4j...")
     neo4j_graph = Neo4jFraudGraph(
-        uri="bolt://localhost:7687",
-        user="neo4j",
-        password="fraud_detection_2024"
+        uri="bolt://localhost:7687", user="neo4j", password="fraud_detection_2024"
     )
     print("   ✓ Connected successfully\n")
 
@@ -26,7 +24,9 @@ def main():
     print("3. Generating synthetic dataset...")
     generator = FraudDatasetGenerator(seed=42)
     dataset = generator.generate_dataset(n_users=50, n_transactions=200)
-    print(f"   Users: {len(dataset['users'])} ({dataset['users']['is_fraudster'].sum()} fraudsters)")
+    print(
+        f"   Users: {len(dataset['users'])} ({dataset['users']['is_fraudster'].sum()} fraudsters)"
+    )
     print(f"   Transactions: {len(dataset['transactions'])}\n")
 
     # Build graph in Neo4j
@@ -51,7 +51,7 @@ def main():
 
     # Test transaction paths
     print("7. Testing transaction path queries...")
-    users = dataset['users']['user_id'].head(5).tolist()
+    users = dataset["users"]["user_id"].head(5).tolist()
     if len(users) >= 2:
         paths = neo4j_graph.get_transaction_paths(users[0], users[1])
         print(f"   Paths from {users[0]} to {users[1]}: {len(paths)}")
@@ -64,8 +64,12 @@ def main():
     print("Password: fraud_detection_2024")
     print("\nTry these queries in the browser:")
     print("1. View all users: MATCH (u:User) RETURN u LIMIT 25")
-    print("2. View fraud network: MATCH (u:User {is_fraudster: true})-[r]->(n) RETURN u, r, n")
-    print("3. Find shared devices: MATCH (u:User)-[:USES_DEVICE]->(d:Device)<-[:USES_DEVICE]-(u2:User) RETURN u, d, u2")
+    print(
+        "2. View fraud network: MATCH (u:User {is_fraudster: true})-[r]->(n) RETURN u, r, n"
+    )
+    print(
+        "3. Find shared devices: MATCH (u:User)-[:USES_DEVICE]->(d:Device)<-[:USES_DEVICE]-(u2:User) RETURN u, d, u2"
+    )
 
     # Close connection
     neo4j_graph.close()

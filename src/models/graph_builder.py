@@ -69,9 +69,15 @@ class FraudGraph:
                 )
 
                 # Add to transaction network (accumulate amounts)
-                if self.transaction_network.has_edge(txn["sender_id"], txn["receiver_id"]):
-                    self.transaction_network[txn["sender_id"]][txn["receiver_id"]]["total_amount"] += txn["amount"]
-                    self.transaction_network[txn["sender_id"]][txn["receiver_id"]]["transaction_count"] += 1
+                if self.transaction_network.has_edge(
+                    txn["sender_id"], txn["receiver_id"]
+                ):
+                    self.transaction_network[txn["sender_id"]][txn["receiver_id"]][
+                        "total_amount"
+                    ] += txn["amount"]
+                    self.transaction_network[txn["sender_id"]][txn["receiver_id"]][
+                        "transaction_count"
+                    ] += 1
                 else:
                     self.transaction_network.add_edge(
                         txn["sender_id"],
@@ -99,12 +105,18 @@ class FraudGraph:
         shared = {}
         for node in self.G.nodes():
             if self.G.nodes[node].get("node_type") == "device":
-                users = [n for n in self.G.neighbors(node) if self.G.nodes[n].get("node_type") == "user"]
+                users = [
+                    n
+                    for n in self.G.neighbors(node)
+                    if self.G.nodes[n].get("node_type") == "user"
+                ]
                 if len(users) > 1:
                     shared[node] = users
         return shared
 
-    def get_transaction_paths(self, source: str, target: str, max_depth: int = 3) -> list:
+    def get_transaction_paths(
+        self, source: str, target: str, max_depth: int = 3
+    ) -> list:
         """Find transaction paths between two users."""
         try:
             paths = nx.all_simple_paths(
@@ -119,15 +131,23 @@ class FraudGraph:
 
     def get_statistics(self) -> Dict:
         """Compute basic graph statistics."""
-        user_nodes = [n for n in self.G.nodes() if self.G.nodes[n].get("node_type") == "user"]
-        device_nodes = [n for n in self.G.nodes() if self.G.nodes[n].get("node_type") == "device"]
+        user_nodes = [
+            n for n in self.G.nodes() if self.G.nodes[n].get("node_type") == "user"
+        ]
+        device_nodes = [
+            n for n in self.G.nodes() if self.G.nodes[n].get("node_type") == "device"
+        ]
 
         return {
             "total_nodes": self.G.number_of_nodes(),
             "total_edges": self.G.number_of_edges(),
             "user_nodes": len(user_nodes),
             "device_nodes": len(device_nodes),
-            "avg_degree": sum(dict(self.G.degree()).values()) / self.G.number_of_nodes() if self.G.number_of_nodes() > 0 else 0,
+            "avg_degree": (
+                sum(dict(self.G.degree()).values()) / self.G.number_of_nodes()
+                if self.G.number_of_nodes() > 0
+                else 0
+            ),
             "connected_components": nx.number_connected_components(self.G),
             "transaction_edges": self.transaction_network.number_of_edges(),
         }

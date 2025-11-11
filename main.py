@@ -54,7 +54,9 @@ def main():
     for metric, value in patterns["detection_accuracy"].items():
         print(f"   {metric}: {value}")
 
-    print("\n=== Done! Run notebooks/fraud_detection_demo.ipynb for detailed analysis ===")
+    print(
+        "\n=== Done! Run notebooks/fraud_detection_demo.ipynb for detailed analysis ==="
+    )
 
 
 if __name__ == "__main__":

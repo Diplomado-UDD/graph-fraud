@@ -84,9 +84,7 @@ class TestGraphRAG:
 
         if len(users) >= 2:
             result = graph_rag.query(
-                "transaction_path",
-                source=users[0],
-                target=users[1]
+                "transaction_path", source=users[0], target=users[1]
             )
 
             assert result is not None

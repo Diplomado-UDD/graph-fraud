@@ -9,7 +9,12 @@ import networkx as nx
 class Neo4jFraudGraph:
     """Build and manage fraud detection graph in Neo4j."""
 
-    def __init__(self, uri: str = "bolt://localhost:7687", user: str = "neo4j", password: str = "neo4j"):
+    def __init__(
+        self,
+        uri: str = "bolt://localhost:7687",
+        user: str = "neo4j",
+        password: str = "neo4j",
+    ):
         """Initialize Neo4j connection."""
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
         self._verify_connection()
@@ -42,9 +47,15 @@ class Neo4jFraudGraph:
 
         with self.driver.session() as session:
             # Create constraints and indexes
-            session.run("CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.user_id IS UNIQUE")
-            session.run("CREATE CONSTRAINT device_id IF NOT EXISTS FOR (d:Device) REQUIRE d.device_id IS UNIQUE")
-            session.run("CREATE INDEX user_fraudster IF NOT EXISTS FOR (u:User) ON (u.is_fraudster)")
+            session.run(
+                "CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.user_id IS UNIQUE"
+            )
+            session.run(
+                "CREATE CONSTRAINT device_id IF NOT EXISTS FOR (d:Device) REQUIRE d.device_id IS UNIQUE"
+            )
+            session.run(
+                "CREATE INDEX user_fraudster IF NOT EXISTS FOR (u:User) ON (u.is_fraudster)"
+            )
 
             # Create user nodes
             for _, user in users_df.iterrows():
@@ -60,7 +71,7 @@ class Neo4jFraudGraph:
                     user_id=user["user_id"],
                     is_fraudster=bool(user["is_fraudster"]),
                     account_age_days=int(user["account_age_days"]),
-                    verification_level=user["verification_level"]
+                    verification_level=user["verification_level"],
                 )
 
             # Create device nodes
@@ -73,7 +84,7 @@ class Neo4jFraudGraph:
                     })
                     """,
                     device_id=device["device_id"],
-                    device_type=device["device_type"]
+                    device_type=device["device_type"],
                 )
 
             # Create user-device relationships
@@ -85,7 +96,7 @@ class Neo4jFraudGraph:
                     CREATE (u)-[:USES_DEVICE]->(d)
                     """,
                     user_id=rel["user_id"],
-                    device_id=rel["device_id"]
+                    device_id=rel["device_id"],
                 )
 
             # Create transaction relationships
@@ -106,21 +117,30 @@ class Neo4jFraudGraph:
                         transaction_id=txn["transaction_id"],
                         amount=float(txn["amount"]),
                         timestamp=str(txn["timestamp"]).replace(" ", "T"),
-                        is_fraudulent=bool(txn["is_fraudulent"])
+                        is_fraudulent=bool(txn["is_fraudulent"]),
                     )
 
         # Also build an in-memory NetworkX graph mirror for algorithms that expect NetworkX
         # User nodes
         for _, user in users_df.iterrows():
             uid = user["user_id"]
-            self.G.add_node(uid, node_type="user", is_fraudster=bool(user["is_fraudster"]), account_age_days=int(user["account_age_days"]))
+            self.G.add_node(
+                uid,
+                node_type="user",
+                is_fraudster=bool(user["is_fraudster"]),
+                account_age_days=int(user["account_age_days"]),
+            )
             # transaction network uses users only
-            self.transaction_network.add_node(uid, is_fraudster=bool(user["is_fraudster"]))
+            self.transaction_network.add_node(
+                uid, is_fraudster=bool(user["is_fraudster"])
+            )
 
         # Device nodes
         for _, device in devices_df.iterrows():
             did = device["device_id"]
-            self.G.add_node(did, node_type="device", device_type=device.get("device_type"))
+            self.G.add_node(
+                did, node_type="device", device_type=device.get("device_type")
+            )
 
         # User-device edges
         for _, rel in user_devices_df.iterrows():
@@ -146,7 +166,9 @@ class Neo4jFraudGraph:
                     self.transaction_network.add_node(s, is_fraudster=False)
                 if r not in self.transaction_network:
                     self.transaction_network.add_node(r, is_fraudster=False)
-                self.transaction_network.add_edge(s, r, transaction_id=tid, amount=amt, is_fraudulent=is_fraud)
+                self.transaction_network.add_edge(
+                    s, r, transaction_id=tid, amount=amt, is_fraudulent=is_fraud
+                )
 
     def get_shared_devices(self) -> Dict[str, list]:
         """Find devices shared by multiple users."""
@@ -173,7 +195,9 @@ class Neo4jFraudGraph:
             paths = list(result)
             return {"paths": paths, "user_id": user_id}
 
-    def get_transaction_paths(self, source: str, target: str, max_depth: int = 3) -> list:
+    def get_transaction_paths(
+        self, source: str, target: str, max_depth: int = 3
+    ) -> list:
         """Find transaction paths between two users."""
         with self.driver.session() as session:
             # Build query with literal max_depth value (Cypher doesn't support parameterized path lengths)
@@ -189,12 +213,20 @@ class Neo4jFraudGraph:
         """Compute basic graph statistics."""
         with self.driver.session() as session:
             # Count nodes by type
-            users_count = session.run("MATCH (u:User) RETURN count(u) AS count").single()["count"]
-            devices_count = session.run("MATCH (d:Device) RETURN count(d) AS count").single()["count"]
+            users_count = session.run(
+                "MATCH (u:User) RETURN count(u) AS count"
+            ).single()["count"]
+            devices_count = session.run(
+                "MATCH (d:Device) RETURN count(d) AS count"
+            ).single()["count"]
 
             # Count relationships
-            uses_device_count = session.run("MATCH ()-[r:USES_DEVICE]->() RETURN count(r) AS count").single()["count"]
-            transaction_count = session.run("MATCH ()-[r:TRANSACTED]->() RETURN count(r) AS count").single()["count"]
+            uses_device_count = session.run(
+                "MATCH ()-[r:USES_DEVICE]->() RETURN count(r) AS count"
+            ).single()["count"]
+            transaction_count = session.run(
+                "MATCH ()-[r:TRANSACTED]->() RETURN count(r) AS count"
+            ).single()["count"]
 
             return {
                 "total_nodes": users_count + devices_count,
@@ -230,7 +262,9 @@ class Neo4jFraudGraph:
                 """
             )
 
-            communities = {record["user_id"]: record["communityId"] for record in result}
+            communities = {
+                record["user_id"]: record["communityId"] for record in result
+            }
 
             # Drop projection
             session.run("CALL gds.graph.drop('fraudGraph')")
@@ -263,7 +297,14 @@ class Neo4jFraudGraph:
                 """
             )
 
-            data = [{"user_id": r["user_id"], "pagerank": r["score"], "is_fraudster": r["is_fraudster"]} for r in result]
+            data = [
+                {
+                    "user_id": r["user_id"],
+                    "pagerank": r["score"],
+                    "is_fraudster": r["is_fraudster"],
+                }
+                for r in result
+            ]
 
             # Drop projection
             session.run("CALL gds.graph.drop('transactionGraph')")
@@ -278,20 +319,35 @@ class Neo4jFraudGraph:
 
         with self.driver.session() as session:
             # Load users
-            users = session.run("MATCH (u:User) RETURN u.user_id AS user_id, u.is_fraudster AS is_fraudster, u.account_age_days AS account_age_days")
+            users = session.run(
+                "MATCH (u:User) RETURN u.user_id AS user_id, u.is_fraudster AS is_fraudster, u.account_age_days AS account_age_days"
+            )
             for rec in users:
                 uid = rec["user_id"]
-                self.G.add_node(uid, node_type="user", is_fraudster=bool(rec.get("is_fraudster", False)), account_age_days=int(rec.get("account_age_days") or 0))
-                self.transaction_network.add_node(uid, is_fraudster=bool(rec.get("is_fraudster", False)))
+                self.G.add_node(
+                    uid,
+                    node_type="user",
+                    is_fraudster=bool(rec.get("is_fraudster", False)),
+                    account_age_days=int(rec.get("account_age_days") or 0),
+                )
+                self.transaction_network.add_node(
+                    uid, is_fraudster=bool(rec.get("is_fraudster", False))
+                )
 
             # Load devices
-            devices = session.run("MATCH (d:Device) RETURN d.device_id AS device_id, d.device_type AS device_type")
+            devices = session.run(
+                "MATCH (d:Device) RETURN d.device_id AS device_id, d.device_type AS device_type"
+            )
             for rec in devices:
                 did = rec["device_id"]
-                self.G.add_node(did, node_type="device", device_type=rec.get("device_type"))
+                self.G.add_node(
+                    did, node_type="device", device_type=rec.get("device_type")
+                )
 
             # Load user-device relationships
-            uds = session.run("MATCH (u:User)-[:USES_DEVICE]->(d:Device) RETURN u.user_id AS user_id, d.device_id AS device_id")
+            uds = session.run(
+                "MATCH (u:User)-[:USES_DEVICE]->(d:Device) RETURN u.user_id AS user_id, d.device_id AS device_id"
+            )
             for rec in uds:
                 uid = rec["user_id"]
                 did = rec["device_id"]
@@ -302,7 +358,9 @@ class Neo4jFraudGraph:
                 self.G.add_edge(uid, did, relation="USES_DEVICE")
 
             # Load transactions
-            txns = session.run("MATCH (s:User)-[t:TRANSACTED]->(r:User) RETURN s.user_id AS sender, r.user_id AS receiver, t.transaction_id AS transaction_id, t.amount AS amount, t.is_fraudulent AS is_fraudulent")
+            txns = session.run(
+                "MATCH (s:User)-[t:TRANSACTED]->(r:User) RETURN s.user_id AS sender, r.user_id AS receiver, t.transaction_id AS transaction_id, t.amount AS amount, t.is_fraudulent AS is_fraudulent"
+            )
             for rec in txns:
                 s = rec["sender"]
                 r = rec["receiver"]
@@ -313,4 +371,6 @@ class Neo4jFraudGraph:
                     self.transaction_network.add_node(s, is_fraudster=False)
                 if r not in self.transaction_network:
                     self.transaction_network.add_node(r, is_fraudster=False)
-                self.transaction_network.add_edge(s, r, transaction_id=tid, amount=amt, is_fraudulent=is_fraud)
+                self.transaction_network.add_edge(
+                    s, r, transaction_id=tid, amount=amt, is_fraudulent=is_fraud
+                )

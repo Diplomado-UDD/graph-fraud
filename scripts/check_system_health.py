@@ -15,8 +15,6 @@ import json
 import subprocess
 import urllib.request
 import urllib.error
-from urllib.parse import urljoin
-import os
 import sys
 
 try:
@@ -41,7 +39,7 @@ SERVICES = {
 def check_http(url, timeout=5):
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
-            return True, r.read(1024).decode('utf-8', errors='replace')
+            return True, r.read(1024).decode("utf-8", errors="replace")
     except urllib.error.HTTPError as e:
         return False, f"HTTP {e.code}: {e.reason}"
     except Exception as e:
@@ -52,7 +50,14 @@ def docker_ps(names):
     out = {}
     for name in names:
         try:
-            cmd = ["docker", "ps", "--filter", f"name={name}", "--format", '{{.Names}} {{.Status}}']
+            cmd = [
+                "docker",
+                "ps",
+                "--filter",
+                f"name={name}",
+                "--format",
+                "{{.Names}} {{.Status}}",
+            ]
             p = subprocess.run(cmd, capture_output=True, text=True, check=False)
             out[name] = p.stdout.strip() or "not running"
         except Exception as e:
@@ -102,11 +107,15 @@ def main():
                 "run",
                 "python",
                 "-c",
-                ("import config; from neo4j import GraphDatabase; "
-                 "drv=GraphDatabase.driver(config.NEO4J_URI, auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)); "
-                 "s=drv.session(); r=s.run('RETURN 1 AS ok').single(); s.close(); drv.close(); print('BOLT_OK')")
+                (
+                    "import config; from neo4j import GraphDatabase; "
+                    "drv=GraphDatabase.driver(config.NEO4J_URI, auth=(config.NEO4J_USER, config.NEO4J_PASSWORD)); "
+                    "s=drv.session(); r=s.run('RETURN 1 AS ok').single(); s.close(); drv.close(); print('BOLT_OK')"
+                ),
             ]
-            p = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=10)
+            p = subprocess.run(
+                cmd, capture_output=True, text=True, check=False, timeout=10
+            )
             out = (p.stdout or "") + (p.stderr or "")
             if "BOLT_OK" in out or "QUERY_OK" in out:
                 neo4j_bolt_ok = True
@@ -118,11 +127,17 @@ def main():
             neo4j_bolt_ok = False
             neo4j_bolt_info = f"fallback check error: {e}"
 
-    results['neo4j_bolt'] = {"ok": neo4j_bolt_ok, "info": neo4j_bolt_info}
+    results["neo4j_bolt"] = {"ok": neo4j_bolt_ok, "info": neo4j_bolt_info}
     print(f" - neo4j_bolt: {'OK' if neo4j_bolt_ok else 'FAIL'}")
 
     print("\nChecking Docker containers:")
-    names = ["fraud-neo4j", "fraud-mlflow", "fraud-prometheus", "fraud-grafana", "fraud-graph-rag-api"]
+    names = [
+        "fraud-neo4j",
+        "fraud-mlflow",
+        "fraud-prometheus",
+        "fraud-grafana",
+        "fraud-graph-rag-api",
+    ]
     ps = docker_ps(names)
     for n, s in ps.items():
         print(f" - {n}: {s}")
@@ -148,9 +163,11 @@ def main():
                 break
 
     if any_fail:
-        print("One or more health checks failed (HTTP or container health); exiting with status 2")
+        print(
+            "One or more health checks failed (HTTP or container health); exiting with status 2"
+        )
         sys.exit(2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

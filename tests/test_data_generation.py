@@ -1,7 +1,6 @@
 """Unit tests for synthetic data generation."""
 
 import pytest
-import pandas as pd
 from src.data.generate_dataset import FraudDatasetGenerator
 
 
@@ -50,7 +49,13 @@ class TestFraudDatasetGenerator:
         transactions = dataset["transactions"]
 
         # Check columns
-        required_columns = ["transaction_id", "sender_id", "receiver_id", "amount", "timestamp"]
+        required_columns = [
+            "transaction_id",
+            "sender_id",
+            "receiver_id",
+            "amount",
+            "timestamp",
+        ]
         for col in required_columns:
             assert col in transactions.columns
 
@@ -63,7 +68,9 @@ class TestFraudDatasetGenerator:
         users = dataset["users"]
 
         fraud_rate = users["is_fraudster"].mean()
-        assert 0.1 <= fraud_rate <= 0.25, f"Fraud rate {fraud_rate:.2%} outside expected range"
+        assert (
+            0.1 <= fraud_rate <= 0.25
+        ), f"Fraud rate {fraud_rate:.2%} outside expected range"
 
     def test_referential_integrity(self, generator):
         """Test referential integrity between tables."""
@@ -112,7 +119,9 @@ class TestFraudDatasetGenerator:
         assert len(dataset1["users"]) == len(dataset2["users"])
         assert len(dataset1["transactions"]) == len(dataset2["transactions"])
         # Check fraud flags are identical
-        assert (dataset1["users"]["is_fraudster"] == dataset2["users"]["is_fraudster"]).all()
+        assert (
+            dataset1["users"]["is_fraudster"] == dataset2["users"]["is_fraudster"]
+        ).all()
 
     def test_no_missing_values(self, generator):
         """Test dataset has no missing values."""

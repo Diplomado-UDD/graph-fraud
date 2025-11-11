@@ -37,16 +37,36 @@ def summarize_matches(name: str, matches, limit=20):
 
 def suggest_from_text(text: str):
     suggestions = []
-    if re.search(r"address already in use|bind: address already in use|port.*in use", text, re.IGNORECASE):
-        suggestions.append("Port conflict detected. Verify host ports in docker-compose and that no other service is using them.")
-    if re.search(r"permission denied|write permission|permissionerror", text, re.IGNORECASE):
-        suggestions.append("Permission issues detected. Ensure container volumes map to writable host directories (e.g., ./mlflow) and correct filesystem permissions.")
-    if re.search(r"authentication|unauthorized|invalid credentials|neo4j.*authentication", text, re.IGNORECASE):
-        suggestions.append("Authentication failures detected. Check NEO4J_USERNAME/NEO4J_PASSWORD and MLflow tracking URI credentials.")
+    if re.search(
+        r"address already in use|bind: address already in use|port.*in use",
+        text,
+        re.IGNORECASE,
+    ):
+        suggestions.append(
+            "Port conflict detected. Verify host ports in docker-compose and that no other service is using them."
+        )
+    if re.search(
+        r"permission denied|write permission|permissionerror", text, re.IGNORECASE
+    ):
+        suggestions.append(
+            "Permission issues detected. Ensure container volumes map to writable host directories (e.g., ./mlflow) and correct filesystem permissions."
+        )
+    if re.search(
+        r"authentication|unauthorized|invalid credentials|neo4j.*authentication",
+        text,
+        re.IGNORECASE,
+    ):
+        suggestions.append(
+            "Authentication failures detected. Check NEO4J_USERNAME/NEO4J_PASSWORD and MLflow tracking URI credentials."
+        )
     if re.search(r"traceback|exception", text, re.IGNORECASE):
-        suggestions.append("Python exceptions found. Inspect traceback snippets above to identify failing module or missing dependency.")
+        suggestions.append(
+            "Python exceptions found. Inspect traceback snippets above to identify failing module or missing dependency."
+        )
     if re.search(r"out of memory|oom|killed", text, re.IGNORECASE):
-        suggestions.append("Containers may be OOM killed. Consider increasing runner memory or optimizing services.")
+        suggestions.append(
+            "Containers may be OOM killed. Consider increasing runner memory or optimizing services."
+        )
     return suggestions
 
 
@@ -71,7 +91,9 @@ def main():
     summary_lines = []
 
     # Read health report and try to parse JSON
-    hr_text = read_file(files["health_report"]) if files["health_report"].exists() else ""
+    hr_text = (
+        read_file(files["health_report"]) if files["health_report"].exists() else ""
+    )
     if hr_text:
         parsed = try_parse_json(hr_text)
         if parsed:
@@ -79,17 +101,25 @@ def main():
             # look for top-level http/docker sections
             if isinstance(parsed, dict):
                 # summarize http subkeys
-                http = parsed.get("http") or parsed.get("services") or parsed.get("status")
+                http = (
+                    parsed.get("http") or parsed.get("services") or parsed.get("status")
+                )
                 if isinstance(http, dict):
                     for k, v in http.items():
-                        summary_lines.append(f" - {k}: {('OK' if (isinstance(v, dict) and v.get('ok')) else str(v))}\n")
+                        summary_lines.append(
+                            f" - {k}: {('OK' if (isinstance(v, dict) and v.get('ok')) else str(v))}\n"
+                        )
         else:
-            summary_lines.append("Health report: not JSON, captured raw text in diagnostics.\n")
+            summary_lines.append(
+                "Health report: not JSON, captured raw text in diagnostics.\n"
+            )
 
     patterns = [r"error", r"exception", r"traceback", r"warn", r"failed", r"unhealthy"]
 
     # Scan compose logs
-    compose_text = read_file(files["compose_logs"]) if files["compose_logs"].exists() else ""
+    compose_text = (
+        read_file(files["compose_logs"]) if files["compose_logs"].exists() else ""
+    )
     matches = find_matches(compose_text, patterns)
     summary_lines.append(summarize_matches("docker-compose logs", matches))
 

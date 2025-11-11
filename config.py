@@ -18,7 +18,13 @@ OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 MODELS_DIR = PROJECT_ROOT / "models"
 
 # Ensure directories exist
-for directory in [RAW_DATA_DIR, PROCESSED_DATA_DIR, NEO4J_BACKUP_DIR, OUTPUTS_DIR, MODELS_DIR]:
+for directory in [
+    RAW_DATA_DIR,
+    PROCESSED_DATA_DIR,
+    NEO4J_BACKUP_DIR,
+    OUTPUTS_DIR,
+    MODELS_DIR,
+]:
     directory.mkdir(parents=True, exist_ok=True)
 
 # Dataset generation parameters

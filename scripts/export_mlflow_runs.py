@@ -28,26 +28,39 @@ def export_db(db_path: Path):
         exp_id = exp["experiment_id"]
         name = exp["name"]
         runs = []
-        for run in cur.execute("SELECT run_uuid, artifact_uri, status, start_time FROM runs WHERE experiment_id=? ORDER BY start_time DESC", (exp_id,)).fetchall():
+        for run in cur.execute(
+            "SELECT run_uuid, artifact_uri, status, start_time FROM runs WHERE experiment_id=? ORDER BY start_time DESC",
+            (exp_id,),
+        ).fetchall():
             run_id = run["run_uuid"]
             # params
-            params = {r["key"]: r["value"] for r in cur.execute("SELECT key, value FROM params WHERE run_uuid=?", (run_id,)).fetchall()}
+            params = {
+                r["key"]: r["value"]
+                for r in cur.execute(
+                    "SELECT key, value FROM params WHERE run_uuid=?", (run_id,)
+                ).fetchall()
+            }
             # metrics (latest value per key)
-            metrics_rows = cur.execute("SELECT key, value, timestamp FROM metrics WHERE run_uuid=? ORDER BY timestamp DESC", (run_id,)).fetchall()
+            metrics_rows = cur.execute(
+                "SELECT key, value, timestamp FROM metrics WHERE run_uuid=? ORDER BY timestamp DESC",
+                (run_id,),
+            ).fetchall()
             metrics = {}
             for r in metrics_rows:
                 k = r["key"]
                 if k not in metrics:
                     metrics[k] = r["value"]
 
-            runs.append({
-                "run_uuid": run_id,
-                "artifact_uri": run["artifact_uri"],
-                "status": run["status"],
-                "start_time": run["start_time"],
-                "params": params,
-                "metrics": metrics,
-            })
+            runs.append(
+                {
+                    "run_uuid": run_id,
+                    "artifact_uri": run["artifact_uri"],
+                    "status": run["status"],
+                    "start_time": run["start_time"],
+                    "params": params,
+                    "metrics": metrics,
+                }
+            )
 
         experiments.append({"experiment_id": exp_id, "name": name, "runs": runs})
 
@@ -63,5 +76,5 @@ def main():
     print(f"Wrote {OUT_PATH}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

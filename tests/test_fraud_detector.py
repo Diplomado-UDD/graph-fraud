@@ -36,8 +36,7 @@ class TestFraudDetector:
     def test_generate_fraud_report(self, detector, dataset):
         """Test fraud report generation."""
         report = detector.generate_fraud_report(
-            dataset["transactions"],
-            risk_threshold=0.15
+            dataset["transactions"], risk_threshold=0.15
         )
 
         # Check report structure
@@ -67,8 +66,7 @@ class TestFraudDetector:
     def test_high_risk_users_list(self, detector, dataset):
         """Test high risk users is a list."""
         report = detector.generate_fraud_report(
-            dataset["transactions"],
-            risk_threshold=0.15
+            dataset["transactions"], risk_threshold=0.15
         )
 
         assert isinstance(report["high_risk_users"], list)
@@ -91,8 +89,7 @@ class TestFraudDetector:
     def test_performance_metrics_calculation(self, detector, dataset):
         """Test precision and recall calculation."""
         report = detector.generate_fraud_report(
-            dataset["transactions"],
-            risk_threshold=0.15
+            dataset["transactions"], risk_threshold=0.15
         )
 
         risk_scores = report["risk_scores"]
@@ -100,7 +97,7 @@ class TestFraudDetector:
 
         if len(high_risk) > 0:
             # Calculate precision
-            true_positives = len(high_risk[high_risk["is_fraudster"] == True])
+            true_positives = len(high_risk[high_risk["is_fraudster"]])
             precision = true_positives / len(high_risk)
 
             assert 0 <= precision <= 1
@@ -116,12 +113,10 @@ class TestFraudDetector:
     def test_threshold_affects_high_risk_count(self, detector, dataset):
         """Test changing threshold changes high risk count."""
         report_low = detector.generate_fraud_report(
-            dataset["transactions"],
-            risk_threshold=0.05
+            dataset["transactions"], risk_threshold=0.05
         )
         report_high = detector.generate_fraud_report(
-            dataset["transactions"],
-            risk_threshold=0.50
+            dataset["transactions"], risk_threshold=0.50
         )
 
         # Lower threshold should flag more users
@@ -130,7 +125,9 @@ class TestFraudDetector:
     def test_detector_with_empty_transactions(self, graph):
         """Test detector handles empty transactions."""
         detector = FraudDetector(graph)
-        empty_transactions = pd.DataFrame(columns=["transaction_id", "sender_id", "receiver_id", "amount"])
+        empty_transactions = pd.DataFrame(
+            columns=["transaction_id", "sender_id", "receiver_id", "amount"]
+        )
 
         # Should not crash
         report = detector.generate_fraud_report(empty_transactions)

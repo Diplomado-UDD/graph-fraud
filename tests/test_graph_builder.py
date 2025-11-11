@@ -1,7 +1,6 @@
 """Unit tests for graph construction."""
 
 import pytest
-import pandas as pd
 from src.data.generate_dataset import FraudDatasetGenerator
 from src.models.graph_builder import FraudGraph
 
@@ -54,11 +53,14 @@ class TestFraudGraph:
 
     def test_transaction_edges_created(self, graph, dataset):
         """Test transactions create edges."""
-        completed_transactions = len(dataset["transactions"][dataset["transactions"]["status"] == "completed"])
+        completed_transactions = len(
+            dataset["transactions"][dataset["transactions"]["status"] == "completed"]
+        )
 
         # Count transaction edges
         transaction_edges = [
-            e for e in graph.G.edges(data=True)
+            e
+            for e in graph.G.edges(data=True)
             if e[2].get("edge_type") == "transaction"
         ]
 
@@ -81,7 +83,9 @@ class TestFraudGraph:
     def test_edge_attributes(self, graph, dataset):
         """Test edges have correct attributes."""
         # Find a completed transaction edge
-        completed = dataset["transactions"][dataset["transactions"]["status"] == "completed"]
+        completed = dataset["transactions"][
+            dataset["transactions"]["status"] == "completed"
+        ]
         if len(completed) > 0:
             sender = completed["sender_id"].iloc[0]
             receiver = completed["receiver_id"].iloc[0]
