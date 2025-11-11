@@ -65,7 +65,7 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: 8000
     volumes:
-      - ./data:/app/data:ro
+      - ./data:/app/data
       - ./outputs:/app/outputs
     depends_on:
       neo4j:
