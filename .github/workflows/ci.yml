@@ -73,12 +73,14 @@ jobs:
 
       - name: Validate Prometheus config
         run: |
-          docker run --rm -v $(pwd)/monitoring/prometheus:/prometheus \
+          docker run --rm -v $(pwd)/monitoring/prometheus:/etc/prometheus \
+            --entrypoint /bin/promtool \
             prom/prometheus:latest \
-            promtool check config /prometheus/prometheus.yml
+            check config /etc/prometheus/prometheus.yml
 
       - name: Validate Prometheus rules
         run: |
-          docker run --rm -v $(pwd)/monitoring/prometheus:/prometheus \
+          docker run --rm -v $(pwd)/monitoring/prometheus:/etc/prometheus \
+            --entrypoint /bin/promtool \
             prom/prometheus:latest \
-            promtool check rules /prometheus/alert_rules.yml
+            check rules /etc/prometheus/alert_rules.yml
