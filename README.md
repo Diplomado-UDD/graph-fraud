@@ -146,6 +146,10 @@ graph-fraud/
 
 This section contains step-by-step, cross-platform instructions to run the entire solution on any machine using Docker and the `uv` package manager. The repository is designed to be run without installing dependencies via `pip` on the host; use `uv` for Python dependency management and Docker / Docker Compose for services.
 
+**Execution Context Note**: 
+- **Host commands** (e.g., `uv run ...`): For local development, data generation, and accessing service UIs
+- **Container commands** (e.g., `docker compose exec graph-rag-api uv run ...`): For scripts that interact with Docker services (MLflow, Neo4j). These must run inside the API container for proper networking.
+
 Prerequisites
 - Git
 - Docker Engine (Docker Desktop on macOS / Windows) with Docker Compose support
@@ -212,11 +216,19 @@ dvc pull
 
 5) Train the fraud detection model (with MLflow tracking)
 
+**Note**: Scripts that interact with Docker services (MLflow, Neo4j) must run inside the API container.
+
 ```bash
-uv run python scripts/train_fraud_detector.py
+# Run training inside the container (recommended)
+docker compose exec graph-rag-api uv run python scripts/train_fraud_detector.py
 
 # After training is finished, view experiments in MLflow UI
 open http://localhost:5001
+```
+
+**Alternative**: For development/testing on host (limited functionality):
+```bash
+uv run python scripts/train_fraud_detector.py  # May fail due to service connectivity
 ```
 
 Notes:
@@ -224,11 +236,19 @@ Notes:
 
 6) Run batch scoring
 
+**Note**: Scripts that interact with Docker services (MLflow, Neo4j) must run inside the API container.
+
 ```bash
-uv run python scripts/batch_scoring.py
+# Run batch scoring inside the container (recommended)
+docker compose exec graph-rag-api uv run python scripts/batch_scoring.py
 
 # Outputs are written to ./outputs/
 ls -la outputs
+```
+
+**Alternative**: For development/testing on host (limited functionality):
+```bash
+uv run python scripts/batch_scoring.py  # May fail due to service connectivity
 ```
 
 7) Generate presentation plots and graph images (used in `docs/`)

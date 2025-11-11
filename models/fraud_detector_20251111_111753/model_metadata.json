@@ -1,0 +1,24 @@
+{
+  "version": "20251111_111753",
+  "data_version": "v1.0",
+  "risk_threshold": 0.15,
+  "weights": {
+    "device_risk": 0.35,
+    "age_risk": 0.25,
+    "amount_risk": 0.2,
+    "volume_risk": 0.1,
+    "centrality_risk": 0.1
+  },
+  "metrics": {
+    "precision": 0.8823529411764706,
+    "recall": 1.0,
+    "f1_score": 0.9375,
+    "true_positives": 30,
+    "false_positives": 4,
+    "total_fraudsters": 30,
+    "high_risk_users": 34,
+    "ring_members_detected": 14,
+    "solo_fraudsters_detected": 20
+  },
+  "trained_at": "2025-11-11T11:17:54.491567"
+}

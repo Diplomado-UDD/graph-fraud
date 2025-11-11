@@ -64,6 +64,7 @@ services:
       NEO4J_PASSWORD: fraud_detection_2024
       API_HOST: 0.0.0.0
       API_PORT: 8000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
       - ./data:/app/data
       - ./outputs:/app/outputs

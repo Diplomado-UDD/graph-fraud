@@ -12,10 +12,42 @@ import mlflow.pyfunc
 import pandas as pd
 import json
 from datetime import datetime
+import matplotlib.pyplot as plt
 import config
 from src.models.neo4j_graph_builder import Neo4jFraudGraph
 from src.models.graph_builder import FraudGraph
 from src.models.fraud_detector import FraudDetector
+
+
+def log_training_plots(report):
+    """Log training plots to MLflow"""
+    risk_scores = report["risk_scores"]
+
+    # Plot risk score distribution
+    plt.figure(figsize=(10, 6))
+    plt.hist(risk_scores["risk_score"], bins=50, alpha=0.7, edgecolor='black')
+    plt.axvline(config.RISK_THRESHOLD, color='red', linestyle='--', label=f'Threshold: {config.RISK_THRESHOLD}')
+    plt.xlabel('Risk Score')
+    plt.ylabel('Frequency')
+    plt.title('Risk Score Distribution')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    mlflow.log_figure(plt.gcf(), "risk_score_distribution.png")
+    plt.close()
+
+    # Plot high-risk users
+    high_risk = risk_scores[risk_scores["risk_score"] > config.RISK_THRESHOLD]
+    plt.figure(figsize=(8, 6))
+    plt.scatter(high_risk["risk_score"], [1] * len(high_risk), alpha=0.6, color='red', label='High Risk')
+    low_risk = risk_scores[risk_scores["risk_score"] <= config.RISK_THRESHOLD]
+    plt.scatter(low_risk["risk_score"], [0] * len(low_risk), alpha=0.6, color='green', label='Low Risk')
+    plt.axvline(config.RISK_THRESHOLD, color='black', linestyle='--', label=f'Threshold: {config.RISK_THRESHOLD}')
+    plt.xlabel('Risk Score')
+    plt.title('High vs Low Risk Users')
+    plt.legend()
+    plt.yticks([0, 1], ['Low Risk', 'High Risk'])
+    mlflow.log_figure(plt.gcf(), "risk_classification.png")
+    plt.close()
 
 
 def load_dataset():
@@ -194,6 +226,9 @@ def main():
 
         # Log metrics
         mlflow.log_metrics(metrics)
+
+        # Log plots
+        log_training_plots(report)
 
         # Check if model meets criteria
         meets_criteria = (
