@@ -18,6 +18,18 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           export PATH="$HOME/.local/bin:$PATH"
 
+      - name: Run unit tests & coverage
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          # Run tests with coverage and produce HTML report
+          uv run pytest --maxfail=1 -q --cov=src --cov-report=html:htmlcov
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov
+
       - name: Build and start stack with Docker Compose
         run: |
           docker compose up -d --build
