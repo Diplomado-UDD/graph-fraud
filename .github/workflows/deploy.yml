@@ -7,8 +7,8 @@ on:
       - 'v*'
 
 env:
-  REGISTRY: docker.io
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/fraud-detector
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -20,30 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Docker Hub secrets
-        id: check_secrets
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: |
-          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
-            echo "push_enabled=true" >> $GITHUB_OUTPUT
-          else
-            echo "push_enabled=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        if: ${{ steps.check_secrets.outputs.push_enabled == 'true' }}
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
+      - name: Extract metadata for batch image
+        id: meta-batch
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -54,25 +39,37 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - name: Build batch scoring image (build and optionally push)
+      - name: Extract metadata for API image
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push batch scoring image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile
-          push: ${{ steps.check_secrets.outputs.push_enabled == 'true' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta-batch.outputs.tags }}
+          labels: ${{ steps.meta-batch.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build API image (build and optionally push)
+      - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/Dockerfile.api
-          push: ${{ steps.check_secrets.outputs.push_enabled == 'true' }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -81,7 +78,8 @@ jobs:
     needs: build-and-push
     if: github.ref == 'refs/heads/main'
     environment:
-      name: staging
+      name: staging-environment
+      url: https://staging.example.com
 
     steps:
       - uses: actions/checkout@v4
@@ -100,7 +98,8 @@ jobs:
     needs: deploy-staging
     if: startsWith(github.ref, 'refs/tags/v')
     environment:
-      name: production
+      name: production-environment
+      url: https://production.example.com
 
     steps:
       - uses: actions/checkout@v4
