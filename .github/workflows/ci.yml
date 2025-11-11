@@ -39,12 +39,10 @@ jobs:
           uv run pytest tests/ || echo "No tests found, skipping"
         continue-on-error: true
 
-      - name: Verify marimo notebooks exist and are valid
+      - name: Verify marimo notebooks can run
         run: |
-          # Just check the notebooks are valid Python files (marimo notebooks are .py files)
-          uv run python -m py_compile notebooks/eda/01_dataset_exploration.py
-          uv run python -m py_compile notebooks/eda/02_graph_analysis.py
-          echo "Marimo notebooks validated successfully"
+          uv run marimo export html notebooks/eda/01_dataset_exploration.py > /dev/null
+          uv run marimo export html notebooks/eda/02_graph_analysis.py > /dev/null
 
   build-docker:
     runs-on: ubuntu-latest
@@ -54,6 +52,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: containerd
 
       - name: Build batch scoring image
         run: |
@@ -68,19 +68,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Validate docker-compose
-        run: docker compose config
+        run: docker-compose config
 
       - name: Validate Prometheus config
         run: |
-          docker run --rm -v $(pwd)/monitoring/prometheus:/etc/prometheus \
-            --entrypoint /bin/promtool \
+          docker run --rm -v $(pwd)/monitoring/prometheus:/prometheus \
             prom/prometheus:latest \
-            check config /etc/prometheus/prometheus.yml
+            promtool check config /prometheus/prometheus.yml
 
       - name: Validate Prometheus rules
         run: |
-          docker run --rm -v $(pwd)/monitoring/prometheus:/etc/prometheus \
-            --entrypoint /bin/promtool \
+          docker run --rm -v $(pwd)/monitoring/prometheus:/prometheus \
             prom/prometheus:latest \
-            check rules /etc/prometheus/alert_rules.yml
+            promtool check rules /prometheus/alert_rules.yml
